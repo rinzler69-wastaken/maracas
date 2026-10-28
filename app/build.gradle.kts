@@ -3,10 +3,10 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 android {
-    namespace = "com.example.maracas"
+    namespace = "id.josjis.maracas"
     compileSdk = 34
     defaultConfig {
-        applicationId = "com.example.maracas"
+        applicationId = "id.josjis.maracas"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

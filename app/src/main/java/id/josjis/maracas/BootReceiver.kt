@@ -1,4 +1,4 @@
-package com.example.maracas
+package id.josjis.maracas
 
 import android.content.BroadcastReceiver
 import android.content.Context

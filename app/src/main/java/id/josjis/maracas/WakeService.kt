@@ -1,4 +1,4 @@
-package com.example.maracas
+package id.josjis.maracas
 
 import android.app.*
 import android.content.Context

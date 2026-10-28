@@ -1,4 +1,4 @@
-package com.example.maracas
+package id.josjis.maracas
 
 import android.Manifest
 import android.app.Activity
