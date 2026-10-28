@@ -1,4 +1,9 @@
 <resources>
-    <!-- Follows system light/dark; on Android 12+ DeviceDefault picks up Material You dynamic colors -->
-    <style name="AppTheme" parent="android:Theme.DeviceDefault.DayNight" />
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:colorAccent">?attr/colorPrimary</item>
+    </style>
 </resources>
