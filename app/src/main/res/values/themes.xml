@@ -1,9 +1,38 @@
 <resources>
+    <!-- Material 3 DayNight. On Android 12+ MainActivity applies dynamic color on top of this;
+         the palette below is the deliberate fallback for Android 8-11 and for dynamic color being off. -->
     <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="android:fontFamily">sans</item>
-        <item name="android:statusBarColor">?attr/colorSurface</item>
-        <item name="android:navigationBarColor">?attr/colorSurface</item>
-        <item name="android:windowActionModeOverlay">true</item>
-        <item name="android:colorAccent">?attr/colorPrimary</item>
+        <item name="colorPrimary">@color/maracas_primary</item>
+        <item name="colorOnPrimary">@color/maracas_on_primary</item>
+        <item name="colorPrimaryContainer">@color/maracas_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/maracas_on_primary_container</item>
+        <item name="colorSecondary">@color/maracas_secondary</item>
+        <item name="colorOnSecondary">@color/maracas_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/maracas_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/maracas_on_secondary_container</item>
+        <item name="colorTertiary">@color/maracas_tertiary</item>
+        <item name="colorOnTertiary">@color/maracas_on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/maracas_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/maracas_on_tertiary_container</item>
+        <item name="colorError">@color/maracas_error</item>
+        <item name="colorOnError">@color/maracas_on_error</item>
+        <item name="colorErrorContainer">@color/maracas_error_container</item>
+        <item name="colorOnErrorContainer">@color/maracas_on_error_container</item>
+        <item name="android:colorBackground">@color/maracas_surface</item>
+        <item name="colorSurface">@color/maracas_surface</item>
+        <item name="colorOnSurface">@color/maracas_on_surface</item>
+        <item name="colorSurfaceVariant">@color/maracas_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/maracas_on_surface_variant</item>
+        <item name="colorOutline">@color/maracas_outline</item>
+        <item name="colorOutlineVariant">@color/maracas_outline_variant</item>
+        <item name="colorSurfaceContainerLowest">@color/maracas_container_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/maracas_container_low</item>
+        <item name="colorSurfaceContainer">@color/maracas_container</item>
+        <item name="colorSurfaceContainerHigh">@color/maracas_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/maracas_container_highest</item>
+
+        <item name="colorMaracasYellow">@color/maracas_yellow</item>
+        <item name="android:windowBackground">?attr/colorSurface</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.Maracas.Button.Outlined</item>
     </style>
 </resources>

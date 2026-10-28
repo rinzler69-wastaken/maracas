@@ -1,0 +1,7 @@
+<resources>
+    <dimen name="page_margin">16dp</dimen>
+    <dimen name="gap">12dp</dimen>
+    <dimen name="radius_header">28dp</dimen>
+    <dimen name="radius_card">24dp</dimen>
+    <dimen name="radius_button">16dp</dimen>
+</resources>

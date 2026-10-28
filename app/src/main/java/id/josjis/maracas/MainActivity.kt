@@ -1,415 +1,432 @@
 package id.josjis.maracas
 
 import android.Manifest
-import android.app.Activity
+import android.animation.ArgbEvaluator
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
+import android.app.ActivityManager
 import android.app.admin.DevicePolicyManager
+import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
+import android.content.res.Configuration
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
-import android.view.Gravity
 import android.view.View
-import android.widget.LinearLayout
-import android.widget.ScrollView
+import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.content.ContextCompat
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.color.DynamicColors
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.slider.Slider
 import kotlin.math.roundToInt
 
-class MainActivity : Activity(), android.hardware.SensorEventListener {
-    private val yellow = Color.parseColor("#FFC107")
-    private lateinit var proximityDot: View
-    private lateinit var proximityValue: TextView
-    private lateinit var batteryValue: TextView
+class MainActivity : AppCompatActivity(), SensorEventListener {
+    private val ui = Handler(Looper.getMainLooper())
+    private var prox: Sensor? = null
+    private var proxNear: Boolean? = null            // null until the first sensor reading arrives
+    private var tracking = false                      // slider is being dragged
+
+    private lateinit var headerCard: MaterialCardView
+    private lateinit var headerIcon: ImageView
+    private lateinit var headerTitle: TextView
+    private lateinit var headerSubtitle: TextView
     private lateinit var masterSwitch: MaterialSwitch
-    private var proximityNear = false
-    private var proximitySensor: android.hardware.Sensor? = null
-    private lateinit var sensorManager: android.hardware.SensorManager
+    private lateinit var masterState: TextView
+    private lateinit var shakeSwitch: MaterialSwitch
+    private lateinit var pickupRow: View
+    private lateinit var pocketRow: View
+    private lateinit var sensSlider: Slider
+    private lateinit var sensValue: TextView
+    private lateinit var proxDot: View
+    private lateinit var proxValue: TextView
+    private lateinit var proxCaption: TextView
+    private lateinit var batteryValue: TextView
+    private lateinit var batteryCaption: TextView
+    private lateinit var batteryOpt: TextView
+    private lateinit var adminStatus: TextView
+    private lateinit var btnAdminRemove: MaterialButton
+
+    private var headerColor = 0
+
+    private val adminComponent by lazy { ComponentName(this, MaracasAdminReceiver::class.java) }
+
+    private val adminLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            refreshAdmin()
+            toast(if (isAdminActive()) R.string.admin_enabled else R.string.admin_not_enabled)
+        }
 
     private fun prefs() = getSharedPreferences("p", Context.MODE_PRIVATE)
-    private val dp: Float get() = resources.displayMetrics.density
-    private fun px(v: Int) = (v * dp).roundToInt()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        DynamicColors.applyToActivityIfAvailable(this)
-        super.onCreate(savedInstanceState)
-
-        if (Build.VERSION.SDK_INT >= 33 &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
+    // Persists the slider value once, after dragging stops or after keyboard/accessibility changes settle.
+    private val commitSens = Runnable {
+        val v = sensSlider.value.roundToInt()
+        if (v != prefs().getInt("sens", 50)) {
+            prefs().edit().putInt("sens", v).apply()
+            syncService()
         }
+    }
+
+    override fun onCreate(b: Bundle?) {
+        DynamicColors.applyToActivityIfAvailable(this)   // Material You on Android 12+, fallback palette otherwise
+        super.onCreate(b)
+        if (Build.VERSION.SDK_INT >= 33 &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
+
+        setContentView(R.layout.activity_main)
+        styleSystemBars()
+        bindViews()
 
         val p = prefs()
-        val page = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(px(20), px(12), px(20), px(28))
-        }
 
-        // Large, expressive app header with the master control in the same row.
-        val header = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, px(8), 0, px(20))
+        // Master switch ("enabled", default false)
+        masterSwitch.isChecked = p.getBoolean("enabled", false)
+        masterSwitch.setOnCheckedChangeListener { _, v ->
+            prefs().edit().putBoolean("enabled", v).apply()
+            syncService()
+            renderHeader(animate = true, wiggle = v)
         }
-        val titleColumn = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        titleColumn.addView(TextView(this).apply {
-            text = "Maracas"
-            textSize = 32f
-            setTextColor(themeColor(com.google.android.material.R.attr.colorOnSurface))
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        renderHeader(animate = false, wiggle = false)
+
+        // Gesture rows: shake / pickup / pocket (defaults unchanged: all true)
+        shakeSwitch = bindRow(findViewById(R.id.rowShake), R.drawable.ic_vibration,
+            R.string.shake_title, R.string.shake_summary, "shake", true, R.string.shake_info)
+        bindRow(pickupRow, R.drawable.ic_smartphone,
+            R.string.pickup_title, R.string.pickup_summary, "pickup", true, R.string.pickup_info)
+        bindRow(pocketRow, R.drawable.ic_pocket,
+            R.string.pocket_title, R.string.pocket_summary, "pocket", true, R.string.pocket_info)
+
+        // Sensitivity ("sens", 0..100, default 50). Left = harder shake (4.0 g), right = lighter (1.8 g).
+        sensSlider.value = p.getInt("sens", 50).coerceIn(0, 100).toFloat()
+        updateSensLabel(sensSlider.value.roundToInt())
+        sensSlider.isEnabled = shakeSwitch.isChecked
+        sensSlider.addOnChangeListener { _, value, _ ->
+            updateSensLabel(value.roundToInt())
+            if (!tracking) {
+                ui.removeCallbacks(commitSens)
+                ui.postDelayed(commitSens, 400)
+            }
+        }
+        sensSlider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) {
+                tracking = true
+                ui.removeCallbacks(commitSens)
+            }
+            override fun onStopTrackingTouch(slider: Slider) {
+                tracking = false
+                commitSens.run()
+            }
         })
-        titleColumn.addView(TextView(this).apply {
-            text = "Wake your screen with a gesture"
-            textSize = 14f
-            setTextColor(themeColor(com.google.android.material.R.attr.colorOnSurfaceVariant))
-        })
-        header.addView(titleColumn, LinearLayout.LayoutParams(0, -2, 1f))
-        masterSwitch = MaterialSwitch(this).apply {
-            text = "Enabled"
-            textSize = 14f
-            isChecked = p.getBoolean("enabled", false)
-            setOnCheckedChangeListener { _, checked ->
-                p.edit().putBoolean("enabled", checked).apply()
-                applyServiceState()
-                updateBatteryStatus()
-            }
+        findViewById<ImageButton>(R.id.sensInfo).apply {
+            contentDescription = getString(R.string.info_cd, getString(R.string.sens_title))
+            setOnClickListener { showInfo(R.string.sens_title, R.string.sens_info) }
         }
-        header.addView(masterSwitch)
-        page.addView(header)
+        findViewById<ImageButton>(R.id.batteryInfo).apply {
+            contentDescription = getString(R.string.info_cd, getString(R.string.battery_title))
+            setOnClickListener { showInfo(R.string.battery_title, R.string.battery_info) }
+        }
 
-        page.addView(sectionHeading("Wake gestures"))
-        page.addView(settingCard(
-            "Shake to wake",
-            "A few deliberate shakes wake the screen while it is off. Higher sensitivity makes lighter shakes count.",
-            "shake", true
-        ), verticalParams(bottom = 10))
-        page.addView(settingCard(
-            "Pick up / flip to wake",
-            "Uses the proximity sensor to detect a near-to-far transition while the screen is off. Sensor behavior varies by device; this is not a dedicated lift-detection sensor.",
-            "pickup", true
-        ), verticalParams(bottom = 10))
-        page.addView(settingCard(
-            "Ignore shakes while in pocket",
-            "When the proximity sensor reports that something is close to the phone, Maracas ignores shake events to reduce accidental wake-ups in a pocket or bag. This also depends on the sensor being present and behaving correctly.",
-            "pocket", true
-        ), verticalParams(bottom = 10))
+        findViewById<MaterialButton>(R.id.btnBattery).setOnClickListener { requestUnrestrictedBattery() }
+        findViewById<MaterialButton>(R.id.btnScreenOff).setOnClickListener { onScreenOff() }
+        btnAdminRemove.setOnClickListener {
+            getSystemService(DevicePolicyManager::class.java).removeActiveAdmin(adminComponent)
+            refreshAdmin()
+            toast(R.string.admin_removed)
+        }
 
-        val sensitivityCard = card()
-        val sensitivityContent = column(16, 14).apply {
-            addView(TextView(this@MainActivity).apply {
-                text = "Shake sensitivity"
-                textSize = 18f
-                setTextColor(themeColor(com.google.android.material.R.attr.colorOnSurface))
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            })
-            addView(TextView(this@MainActivity).apply {
-                text = "Adjust how much movement is needed"
-                textSize = 14f
-                setTextColor(themeColor(com.google.android.material.R.attr.colorOnSurfaceVariant))
-            })
-            val slider = Slider(this@MainActivity).apply {
-                valueFrom = 0f
-                valueTo = 100f
-                stepSize = 1f
-                value = p.getInt("sens", 50).toFloat()
-                contentDescription = "Shake sensitivity"
-                addOnChangeListener { _, value, fromUser ->
-                    if (fromUser) {
-                        p.edit().putInt("sens", value.roundToInt()).apply()
-                    }
-                }
-                addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
-                    override fun onStartTrackingTouch(slider: Slider) {}
-                    override fun onStopTrackingTouch(slider: Slider) { applyServiceState() }
-                })
-            }
-            addView(slider)
-            addView(LinearLayout(this@MainActivity).apply {
-                orientation = LinearLayout.HORIZONTAL
-                addView(TextView(this@MainActivity).apply {
-                    text = "Harder shake"
-                    textSize = 12f
-                    setTextColor(themeColor(com.google.android.material.R.attr.colorOnSurfaceVariant))
-                }, LinearLayout.LayoutParams(0, -2, 1f))
-                addView(TextView(this@MainActivity).apply {
-                    text = "Lighter shake"
-                    textSize = 12f
-                    gravity = Gravity.END
-                    setTextColor(themeColor(com.google.android.material.R.attr.colorOnSurfaceVariant))
-                }, LinearLayout.LayoutParams(0, -2, 1f))
-            })
+        val sm = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        prox = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY)
+        if (prox == null) {
+            for (row in arrayOf(pickupRow, pocketRow))
+                row.findViewById<TextView>(R.id.rowNote).apply { setText(R.string.no_proximity_note); visibility = View.VISIBLE }
         }
-        sensitivityCard.addView(sensitivityContent)
-        page.addView(sensitivityCard, verticalParams(bottom = 12))
-
-        page.addView(sectionHeading("Live status"))
-        val statusRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.TOP
-        }
-        val proximityCard = card()
-        val proximityCol = column(12, 10).apply {
-            gravity = Gravity.CENTER_HORIZONTAL
-            addView(TextView(this@MainActivity).apply {
-                text = "Proximity sensor"
-                textSize = 15f
-                gravity = Gravity.CENTER
-                setTextColor(themeColor(com.google.android.material.R.attr.colorOnSurface))
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            })
-            proximityDot = View(this@MainActivity).apply {
-                background = GradientDrawable().apply {
-                    shape = GradientDrawable.OVAL
-                    setColor(Color.TRANSPARENT)
-                    setStroke(px(2).coerceAtLeast(2), yellow)
-                }
-            }
-            addView(proximityDot, LinearLayout.LayoutParams(px(22), px(22)))
-            proximityValue = TextView(this@MainActivity).apply {
-                text = "Checking…"
-                textSize = 14f
-                gravity = Gravity.CENTER
-                setTextColor(themeColor(com.google.android.material.R.attr.colorOnSurfaceVariant))
-            }
-            addView(proximityValue)
-        }
-        proximityCard.addView(proximityCol)
-
-        val batteryCard = card().apply {
-            isClickable = true
-            isFocusable = true
-            setOnClickListener { showInfo("Battery impact", "Maracas does not currently measure battery drain in mAh or report an estimated battery percentage. When enabled, it keeps a foreground service and sensor listeners active; actual impact depends on your phone, sensor hardware, ROM and usage. Use Android’s Battery settings for measured app usage.") }
-        }
-        val batteryCol = column(10, 8)
-        val batteryTitleRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            addView(TextView(this@MainActivity).apply {
-                text = "Battery impact"
-                textSize = 15f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-                setTextColor(themeColor(com.google.android.material.R.attr.colorOnSurface))
-            }, LinearLayout.LayoutParams(0, -2, 1f))
-            addView(infoButton { showInfo("Battery impact", "Maracas does not currently measure battery drain in mAh or report an estimated battery percentage. When enabled, it keeps a foreground service and sensor listeners active; actual impact depends on your phone, sensor hardware, ROM and usage. Use Android’s Battery settings for measured app usage.") })
-        }
-        batteryCol.addView(batteryTitleRow)
-        batteryValue = TextView(this).apply {
-            textSize = 14f
-            setTextColor(themeColor(com.google.android.material.R.attr.colorOnSurfaceVariant))
-        }
-        batteryCol.addView(batteryValue)
-        batteryCard.addView(batteryCol)
-        statusRow.addView(proximityCard, LinearLayout.LayoutParams(0, -1, 1f).apply { marginEnd = px(6) })
-        statusRow.addView(batteryCard, LinearLayout.LayoutParams(0, -1, 1f).apply { marginStart = px(6) })
-        page.addView(statusRow, verticalParams(bottom = 18))
-
-        page.addView(sectionHeading("More controls"))
-        val actions = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-        }
-        val batteryButton = MaterialButton(this, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
-            text = "Allow unrestricted battery"
-            textSize = 13f
-            insetTop = 0; insetBottom = 0
-            setOnClickListener { openBatterySettings() }
-        }
-        val lockButton = MaterialButton(this, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
-            text = "Turn screen off"
-            textSize = 13f
-            insetTop = 0; insetBottom = 0
-            setOnClickListener { lockScreen() }
-        }
-        actions.addView(batteryButton, LinearLayout.LayoutParams(0, -2, 1f).apply { marginEnd = px(6) })
-        actions.addView(lockButton, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = px(6) })
-        page.addView(actions)
-
-        setContentView(ScrollView(this).apply {
-            clipToPadding = false
-            isFillViewport = true
-            addView(page)
-        })
-
-        updateBatteryStatus()
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as android.hardware.SensorManager
-        proximitySensor = sensorManager.getDefaultSensor(android.hardware.Sensor.TYPE_PROXIMITY)
-        if (proximitySensor == null) {
-            proximityValue.text = "Unavailable"
-            proximityDot.visibility = View.INVISIBLE
-        } else {
-            proximityValue.text = "Waiting for sensor…"
-        }
+        refreshStatus()
+        refreshAdmin()
     }
 
     override fun onResume() {
         super.onResume()
-        proximitySensor?.let { sensorManager.registerListener(this, it, android.hardware.SensorManager.SENSOR_DELAY_NORMAL) }
-        updateBatteryStatus()
+        prox?.let { (getSystemService(Context.SENSOR_SERVICE) as SensorManager)
+            .registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
+        refreshStatus()     // service/battery state can change while we were away
+        refreshAdmin()      // admin can be revoked from system settings
     }
 
     override fun onPause() {
-        if (::sensorManager.isInitialized) sensorManager.unregisterListener(this)
         super.onPause()
+        (getSystemService(Context.SENSOR_SERVICE) as SensorManager).unregisterListener(this)
+        ui.removeCallbacks(commitSens)
+        commitSens.run()          // idempotent: only writes if the slider value differs from the saved one
+        tracking = false
     }
 
-    override fun onSensorChanged(event: android.hardware.SensorEvent) {
-        if (event.sensor.type != android.hardware.Sensor.TYPE_PROXIMITY) return
-        proximityNear = event.values[0] < minOf(5f, event.sensor.maximumRange)
-        (proximityDot.background as? GradientDrawable)?.apply {
-            setColor(if (proximityNear) yellow else Color.TRANSPARENT)
+    override fun onDestroy() {
+        ui.removeCallbacksAndMessages(null)
+        super.onDestroy()
+    }
+
+    // ---- Views ----------------------------------------------------------------------------
+
+    private fun bindViews() {
+        headerCard = findViewById(R.id.headerCard)
+        headerIcon = findViewById(R.id.headerIcon)
+        headerTitle = findViewById(R.id.headerTitle)
+        headerSubtitle = findViewById(R.id.headerSubtitle)
+        masterSwitch = findViewById(R.id.masterSwitch)
+        masterState = findViewById(R.id.masterState)
+        pickupRow = findViewById(R.id.rowPickup)
+        pocketRow = findViewById(R.id.rowPocket)
+        sensSlider = findViewById(R.id.sensSlider)
+        sensValue = findViewById(R.id.sensValue)
+        proxDot = findViewById(R.id.proxDot)
+        proxValue = findViewById(R.id.proxValue)
+        proxCaption = findViewById(R.id.proxCaption)
+        batteryValue = findViewById(R.id.batteryValue)
+        batteryCaption = findViewById(R.id.batteryCaption)
+        batteryOpt = findViewById(R.id.batteryOpt)
+        adminStatus = findViewById(R.id.adminStatus)
+        btnAdminRemove = findViewById(R.id.btnAdminRemove)
+    }
+
+    @Suppress("DEPRECATION")
+    private fun styleSystemBars() {
+        val surface = MaterialColors.getColor(this, com.google.android.material.R.attr.colorSurface, 0)
+        window.statusBarColor = surface
+        window.navigationBarColor = surface
+        val night = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+            Configuration.UI_MODE_NIGHT_YES
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = !night
+            isAppearanceLightNavigationBars = !night
         }
-        proximityValue.text = if (proximityNear) "NEAR" else "FAR"
     }
 
-    override fun onAccuracyChanged(sensor: android.hardware.Sensor?, accuracy: Int) {}
-
-    private fun settingCard(title: String, description: String, key: String, default: Boolean): View {
-        val p = prefs()
-        val c = card()
-        val row = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(px(16), px(10), px(8), px(10))
+    private fun bindRow(
+        row: View, @DrawableRes icon: Int, @StringRes title: Int, @StringRes summary: Int,
+        key: String, def: Boolean, @StringRes info: Int
+    ): MaterialSwitch {
+        val titleText = getString(title)
+        row.findViewById<ImageView>(R.id.rowIcon).setImageResource(icon)
+        row.findViewById<TextView>(R.id.rowTitle).text = titleText
+        row.findViewById<TextView>(R.id.rowSummary).setText(summary)
+        val sw = row.findViewById<MaterialSwitch>(R.id.rowSwitch)
+        sw.contentDescription = titleText
+        sw.isChecked = prefs().getBoolean(key, def)
+        sw.setOnCheckedChangeListener { _, v ->
+            prefs().edit().putBoolean(key, v).apply()
+            if (key == "shake") sensSlider.isEnabled = v
+            syncService()
+            refreshStatus()
         }
-        val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        texts.addView(TextView(this).apply {
-            text = title
-            textSize = 16f
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-            setTextColor(themeColor(com.google.android.material.R.attr.colorOnSurface))
-        })
-        row.addView(texts, LinearLayout.LayoutParams(0, -2, 1f))
-        row.addView(infoButton { showInfo(title, description) })
-        val toggle = MaterialSwitch(this).apply {
-            isChecked = p.getBoolean(key, default)
-            contentDescription = title
-            setOnCheckedChangeListener { _, checked ->
-                p.edit().putBoolean(key, checked).apply()
-                applyServiceState()
-                updateBatteryStatus()
-            }
+        row.findViewById<View>(R.id.rowText).setOnClickListener { sw.toggle() }
+        row.findViewById<ImageButton>(R.id.rowInfo).apply {
+            contentDescription = getString(R.string.info_cd, titleText)
+            setOnClickListener { showInfo(title, info) }   // separate view: never toggles the switch
         }
-        row.addView(toggle)
-        c.addView(row)
-        return c
+        return sw
     }
 
-    private fun card(): MaterialCardView = MaterialCardView(this).apply {
-        radius = px(24).toFloat()
-        cardElevation = 0f
-        strokeWidth = px(1)
-        strokeColor = themeColor(com.google.android.material.R.attr.colorOutlineVariant)
-        setCardBackgroundColor(themeColor(com.google.android.material.R.attr.colorSurfaceContainerLow))
-        useCompatPadding = false
-    }
-
-    private fun column(horizontal: Int, vertical: Int) = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        setPadding(px(horizontal), px(vertical), px(horizontal), px(vertical))
-    }
-
-    private fun sectionHeading(label: String) = TextView(this).apply {
-        text = label
-        textSize = 21f
-        setPadding(px(2), px(12), px(2), px(10))
-        setTextColor(themeColor(com.google.android.material.R.attr.colorOnSurface))
-        setTypeface(typeface, android.graphics.Typeface.BOLD)
-    }
-
-    private fun infoButton(onClick: () -> Unit) = android.widget.ImageButton(this).apply {
-        setImageResource(android.R.drawable.ic_menu_info_details)
-        imageTintList = android.content.res.ColorStateList.valueOf(themeColor(com.google.android.material.R.attr.colorOnSurfaceVariant))
-        background = android.graphics.drawable.RippleDrawable(
-            android.content.res.ColorStateList.valueOf(themeColor(android.R.attr.colorControlHighlight)),
-            null, null
-        )
-        contentDescription = "More information"
-        setPadding(px(10), px(10), px(10), px(10))
-        setOnClickListener { onClick() }
-    }
-
-    private fun showInfo(title: String, message: String) {
+    private fun showInfo(@StringRes title: Int, @StringRes message: Int) {
         MaterialAlertDialogBuilder(this)
             .setTitle(title)
             .setMessage(message)
-            .setPositiveButton("Got it", null)
+            .setPositiveButton(R.string.got_it, null)
             .show()
     }
 
-    private fun verticalParams(bottom: Int = 0) = LinearLayout.LayoutParams(-1, -2).apply {
-        bottomMargin = px(bottom)
+    private fun toast(@StringRes res: Int, long: Boolean = false) =
+        Toast.makeText(this, res, if (long) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
+
+    private fun animationsEnabled() =
+        Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
+
+    // ---- Header ---------------------------------------------------------------------------
+
+    private fun renderHeader(animate: Boolean, wiggle: Boolean) {
+        val on = masterSwitch.isChecked
+        val bg = MaterialColors.getColor(headerCard,
+            if (on) com.google.android.material.R.attr.colorPrimaryContainer
+            else com.google.android.material.R.attr.colorSurfaceContainerHigh)
+        val fg = MaterialColors.getColor(headerCard,
+            if (on) com.google.android.material.R.attr.colorOnPrimaryContainer
+            else com.google.android.material.R.attr.colorOnSurface)
+        headerTitle.setTextColor(fg)
+        headerSubtitle.setTextColor(fg)
+        masterState.setTextColor(fg)
+        masterState.setText(if (on) R.string.state_on else R.string.state_off)
+
+        val motion = animate && animationsEnabled()
+        if (motion && headerColor != 0 && headerColor != bg) {
+            ValueAnimator.ofObject(ArgbEvaluator(), headerColor, bg).apply {
+                duration = 250
+                addUpdateListener { headerCard.setCardBackgroundColor(it.animatedValue as Int) }
+            }.start()
+        } else {
+            headerCard.setCardBackgroundColor(bg)
+        }
+        headerColor = bg
+        if (motion && wiggle) {   // a short maraca-style shake of the icon when turned on
+            ObjectAnimator.ofFloat(headerIcon, View.ROTATION, 0f, -14f, 12f, -8f, 5f, 0f)
+                .setDuration(450).start()
+        }
     }
 
-    private fun themeColor(attr: Int): Int {
-        val a = android.util.TypedValue()
-        theme.resolveAttribute(attr, a, true)
-        if (a.resourceId != 0) return ContextCompat.getColor(this, a.resourceId)
-        return a.data
+    // ---- Sensitivity ----------------------------------------------------------------------
+
+    private fun updateSensLabel(v: Int) {
+        val g = 4.0f - 2.2f * (v / 100f)      // same mapping as WakeService
+        val level = when { v < 34 -> R.string.sens_low; v < 67 -> R.string.sens_medium; else -> R.string.sens_high }
+        sensValue.text = getString(R.string.sens_value, getString(level), g)
     }
 
-    private fun updateBatteryStatus() {
-        val active = prefs().getBoolean("enabled", false) &&
-            (prefs().getBoolean("shake", true) || prefs().getBoolean("pickup", true))
-        batteryValue.text = if (active) "Sensor monitoring active" else "Monitoring paused"
-    }
+    // ---- Status ---------------------------------------------------------------------------
 
-    private fun applyServiceState() {
+    @Suppress("DEPRECATION")
+    private fun serviceRunning(): Boolean =
+        getSystemService(ActivityManager::class.java).getRunningServices(Int.MAX_VALUE)
+            .any { it.service.className == WakeService::class.java.name }
+
+    private fun refreshStatus() {
         val p = prefs()
-        val on = p.getBoolean("enabled", false) &&
-            (p.getBoolean("shake", true) || p.getBoolean("pickup", true))
-        val i = Intent(this, WakeService::class.java)
-        if (on) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(i) else startService(i)
-        } else stopService(i)
+        val enabled = p.getBoolean("enabled", false)
+        val shake = p.getBoolean("shake", true)
+        val pickup = p.getBoolean("pickup", true)
+        val pocket = p.getBoolean("pocket", true)
+
+        renderProximity(proximityNeeded = enabled && (pickup || (shake && pocket)))
+
+        val gesture = shake || pickup
+        val running = enabled && gesture && serviceRunning()
+        batteryValue.setText(if (running) R.string.battery_active else R.string.battery_inactive)
+        batteryCaption.setText(when {
+            running -> R.string.battery_caption_active
+            !enabled -> R.string.battery_caption_off
+            !gesture -> R.string.battery_caption_no_gesture
+            else -> R.string.battery_caption_not_running
+        })
+        val unrestricted = getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(packageName)
+        batteryOpt.setText(if (unrestricted) R.string.battery_opt_unrestricted else R.string.battery_opt_optimized)
     }
 
-    private fun openBatterySettings() {
+    private fun renderProximity(proximityNeeded: Boolean = lastProxNeeded) {
+        lastProxNeeded = proximityNeeded
+        val near = proxNear
+        when {
+            prox == null -> {
+                proxDot.setBackgroundResource(R.drawable.dot_unavailable)
+                proxValue.setText(R.string.prox_unavailable)
+                proxCaption.setText(R.string.prox_caption_unavailable)
+                return
+            }
+            near == null -> { proxDot.setBackgroundResource(R.drawable.dot_clear); proxValue.setText(R.string.prox_checking) }
+            near == true -> { proxDot.setBackgroundResource(R.drawable.dot_covered); proxValue.setText(R.string.prox_covered) }
+            else -> { proxDot.setBackgroundResource(R.drawable.dot_clear); proxValue.setText(R.string.prox_clear) }
+        }
+        proxCaption.setText(if (proximityNeeded) R.string.prox_caption_used else R.string.prox_caption_unused)
+    }
+
+    private var lastProxNeeded = false
+
+    override fun onSensorChanged(e: SensorEvent) {
+        // Same near/far test as the original app and WakeService
+        proxNear = e.values[0] < minOf(5f, e.sensor.maximumRange)
+        renderProximity()
+    }
+
+    override fun onAccuracyChanged(s: Sensor?, a: Int) {}
+
+    // ---- Service control (unchanged semantics) --------------------------------------------
+
+    private fun syncService() {
+        val i = Intent(this, WakeService::class.java)
+        val p = prefs()
+        val on = p.getBoolean("enabled", false) && (p.getBoolean("shake", true) || p.getBoolean("pickup", true))
+        if (on) startForegroundService(i) else stopService(i)
+        // The service starts/stops asynchronously, so re-read its real state shortly afterwards.
+        ui.postDelayed({ refreshStatus() }, 400)
+        ui.postDelayed({ refreshStatus() }, 1500)
+    }
+
+    // ---- Battery optimisation (unchanged behaviour) ---------------------------------------
+
+    private fun requestUnrestrictedBattery() {
         val pm = getSystemService(PowerManager::class.java)
         if (pm.isIgnoringBatteryOptimizations(packageName)) {
-            Toast.makeText(this, "Unrestricted battery use is already allowed", Toast.LENGTH_SHORT).show()
-            return
-        }
-        try {
-            startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName")))
-        } catch (_: Exception) {
+            toast(R.string.battery_already)
+        } else {
             try {
-                startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
-            } catch (_: Exception) {
-                Toast.makeText(this, "Open Settings > Apps > Maracas > Battery and select Unrestricted", Toast.LENGTH_LONG).show()
+                startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                    Uri.parse("package:$packageName")))
+            } catch (e: Exception) {
+                try {
+                    startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                } catch (e2: Exception) {
+                    toast(R.string.battery_manual, long = true)
+                }
             }
         }
     }
 
-    private fun lockScreen() {
-        val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-        val admin = ComponentName(this, MaracasAdminReceiver::class.java)
-        if (dpm.isAdminActive(admin)) {
-            dpm.lockNow()
+    // ---- Turn screen off (device admin, force-lock only) ----------------------------------
+
+    private fun isAdminActive() =
+        getSystemService(DevicePolicyManager::class.java).isAdminActive(adminComponent)
+
+    private fun refreshAdmin() {
+        val active = isAdminActive()
+        adminStatus.setText(if (active) R.string.admin_status_on else R.string.admin_status_off)
+        btnAdminRemove.visibility = if (active) View.VISIBLE else View.GONE
+    }
+
+    private fun onScreenOff() {
+        if (isAdminActive()) {
+            try {
+                getSystemService(DevicePolicyManager::class.java).lockNow()
+            } catch (e: SecurityException) {
+                refreshAdmin()
+                toast(R.string.admin_lock_failed, long = true)
+            }
         } else {
             MaterialAlertDialogBuilder(this)
-                .setTitle("Allow screen lock")
-                .setMessage("Android requires Maracas to be enabled as a device administrator before it can turn the screen off. This permission is only used by the Turn screen off button.")
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Continue") { _, _ ->
-                    startActivity(Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
-                        putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, admin)
-                        putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Allows Maracas to lock the screen when you tap Turn screen off.")
-                    })
-                }
+                .setTitle(R.string.admin_dialog_title)
+                .setMessage(R.string.admin_dialog_message)
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.admin_continue) { _, _ -> launchAdminActivation() }
                 .show()
+        }
+    }
+
+    private fun launchAdminActivation() {
+        val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
+            .putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComponent)
+            .putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, getString(R.string.admin_system_explanation))
+        try {
+            adminLauncher.launch(intent)
+        } catch (e: ActivityNotFoundException) {
+            toast(R.string.admin_unavailable, long = true)
         }
     }
 }

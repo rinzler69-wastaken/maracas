@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Maracas accent, kept from the original app -->
+    <color name="maracas_yellow">#FFC107</color>
+
+    <!-- Light fallback palette (amber seed) -->
+    <color name="maracas_primary">#7B5800</color>
+    <color name="maracas_on_primary">#FFFFFF</color>
+    <color name="maracas_primary_container">#FFDEA6</color>
+    <color name="maracas_on_primary_container">#271900</color>
+    <color name="maracas_secondary">#6D5C3F</color>
+    <color name="maracas_on_secondary">#FFFFFF</color>
+    <color name="maracas_secondary_container">#F7E0BC</color>
+    <color name="maracas_on_secondary_container">#251A04</color>
+    <color name="maracas_tertiary">#4B6546</color>
+    <color name="maracas_on_tertiary">#FFFFFF</color>
+    <color name="maracas_tertiary_container">#CDEBC4</color>
+    <color name="maracas_on_tertiary_container">#082008</color>
+    <color name="maracas_error">#BA1A1A</color>
+    <color name="maracas_on_error">#FFFFFF</color>
+    <color name="maracas_error_container">#FFDAD6</color>
+    <color name="maracas_on_error_container">#410002</color>
+    <color name="maracas_surface">#FFF8F2</color>
+    <color name="maracas_on_surface">#1F1B13</color>
+    <color name="maracas_surface_variant">#EDE1CF</color>
+    <color name="maracas_on_surface_variant">#4E4639</color>
+    <color name="maracas_outline">#807667</color>
+    <color name="maracas_outline_variant">#D0C5B4</color>
+    <color name="maracas_container_lowest">#FFFFFF</color>
+    <color name="maracas_container_low">#FBF2E6</color>
+    <color name="maracas_container">#F5ECDF</color>
+    <color name="maracas_container_high">#EFE6D9</color>
+    <color name="maracas_container_highest">#E9E1D4</color>
+</resources>

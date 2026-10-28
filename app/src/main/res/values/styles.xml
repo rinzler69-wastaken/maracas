@@ -1,0 +1,40 @@
+<resources>
+    <!-- Type scale: Display (app title) > Title (card + row titles) > Body > Label -->
+    <style name="TextAppearance.Maracas.AppTitle" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:textSize">32sp</item>
+        <item name="android:fontFamily">sans-serif-black</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+    <style name="TextAppearance.Maracas.RowTitle" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+    <style name="TextAppearance.Maracas.Secondary" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+    <style name="TextAppearance.Maracas.Caption" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+    <style name="TextAppearance.Maracas.StatusValue" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.Maracas.Button" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_button</item>
+    </style>
+
+    <style name="Widget.Maracas.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton.Icon">
+        <item name="android:minHeight">56dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:maxLines">3</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.Maracas.Button</item>
+    </style>
+
+    <style name="Widget.Maracas.Card" parent="Widget.Material3.CardView.Filled">
+        <item name="cardCornerRadius">@dimen/radius_card</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">0dp</item>
+    </style>
+</resources>

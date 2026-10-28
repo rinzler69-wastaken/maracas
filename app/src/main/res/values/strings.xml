@@ -1,3 +1,75 @@
 <resources>
-    <string name="device_admin_description">Allows Maracas to lock the screen when you tap Turn screen off.</string>
+    <string name="app_name">Maracas</string>
+    <string name="header_subtitle">Motion-powered screen wake</string>
+    <string name="state_on">On</string>
+    <string name="state_off">Off</string>
+    <string name="master_cd">Turn Maracas on or off</string>
+    <string name="got_it">Got it</string>
+    <string name="info_cd">About %1$s</string>
+
+    <!-- Wake gesture rows -->
+    <string name="shake_title">Shake to wake</string>
+    <string name="shake_summary">Wake by shaking the phone</string>
+    <string name="shake_info">Wake the screen by shaking your phone. Maracas looks for a few quick shakes in a row, and the sensitivity setting controls how much movement counts. Lower sensitivity helps avoid accidental wakes.</string>
+    <string name="pickup_title">Pick up / flip to wake</string>
+    <string name="pickup_summary">Wake when uncovered or flipped up</string>
+    <string name="pickup_info">Uses the proximity sensor and the existing pickup/flip detection to wake the screen when the phone is moved out of a covered or face-down position. Availability and behavior depend on the device\'s sensors.</string>
+    <string name="pocket_title">Ignore shakes while in pocket</string>
+    <string name="pocket_summary">Skip shakes while the phone is covered</string>
+    <string name="pocket_info">Uses the proximity sensor to suppress shake-triggered wakes while the phone appears to be covered or inside a pocket. Detection depends on the device\'s sensor behavior.</string>
+    <string name="no_proximity_note">This device has no proximity sensor, so this option has no effect.</string>
+
+    <!-- Sensitivity -->
+    <string name="sens_title">Shake sensitivity</string>
+    <string name="sens_low">Low</string>
+    <string name="sens_medium">Medium</string>
+    <string name="sens_high">High</string>
+    <string name="sens_value">%1$s · about %2$.1f g</string>
+    <string name="sens_end_low">Low · harder shake</string>
+    <string name="sens_end_high">High · lighter shake</string>
+    <string name="sens_cd">Shake sensitivity, left is a harder shake, right is a lighter shake</string>
+    <string name="sens_info">The slider moves the shake threshold between about 4.0 g at the left (low sensitivity, a hard shake is needed) and 1.8 g at the right (high sensitivity, a light shake is enough). 1 g is the pull of normal gravity. It only affects Shake to wake.</string>
+
+    <!-- Proximity status -->
+    <string name="prox_title">Proximity sensor</string>
+    <string name="prox_checking">Checking…</string>
+    <string name="prox_covered">Covered</string>
+    <string name="prox_clear">Clear</string>
+    <string name="prox_unavailable">Unavailable</string>
+    <string name="prox_caption_unavailable">No proximity sensor was found on this device.</string>
+    <string name="prox_caption_used">In use for pickup or pocket detection while Maracas is on.</string>
+    <string name="prox_caption_unused">Not needed by the current settings.</string>
+
+    <!-- Battery status -->
+    <string name="battery_title">Battery impact</string>
+    <string name="battery_active">Monitoring active</string>
+    <string name="battery_inactive">Service inactive</string>
+    <string name="battery_caption_active">Sensors are listening in the background.</string>
+    <string name="battery_caption_off">Maracas is turned off.</string>
+    <string name="battery_caption_no_gesture">Turn on a wake gesture to start.</string>
+    <string name="battery_caption_not_running">Maracas is on but its service is not running. Switch it off and on to restart.</string>
+    <string name="battery_opt_unrestricted">Battery usage: Unrestricted</string>
+    <string name="battery_opt_optimized">Battery usage: Optimized</string>
+    <string name="battery_info">This card shows what Maracas is doing, not how much power it uses. Android does not give apps a reliable measurement of their own battery use, so none is shown.\n\n\"Monitoring active\" means Maracas\'s foreground service is running. It keeps listening to your phone\'s sensors while the screen is off and holds a CPU wake lock for that. A CPU wake lock keeps the processor awake, not the screen. Shake detection reads the accelerometer frequently, so it costs more than pickup detection.\n\n\"Battery usage\" shows whether Android currently restricts Maracas in the background. For real consumption, see Settings > Battery.</string>
+
+    <!-- Actions -->
+    <string name="action_battery">Allow unrestricted battery</string>
+    <string name="action_screen_off">Turn screen off</string>
+    <string name="battery_already">Already allowed</string>
+    <string name="battery_manual">Open Settings > Apps > Maracas > Battery and set Unrestricted</string>
+
+    <!-- Screen off / device admin -->
+    <string name="admin_status_on">Screen-off access: Granted</string>
+    <string name="admin_status_off">Screen-off access: Not granted</string>
+    <string name="admin_remove">Remove</string>
+    <string name="admin_dialog_title">Allow Maracas to turn the screen off?</string>
+    <string name="admin_dialog_message">Android only lets an app lock the screen if you make it a device administrator.\n\nMaracas asks for one permission only: locking the screen. It cannot erase data, change your password or see your files.\n\nTap Continue and Android will show its own activation screen. You stay in control: nothing is activated until you confirm there.\n\nTo remove it later, tap Remove here, or open Settings > Security > Device admin apps (the exact menu name varies by ROM), choose Maracas and deactivate it. Android will not let you uninstall Maracas while it is active.</string>
+    <string name="admin_continue">Continue</string>
+    <string name="cancel">Cancel</string>
+    <string name="admin_system_explanation">Maracas needs this only to turn the screen off when you tap \"Turn screen off\". It requests no other administrator rights.</string>
+    <string name="admin_enabled">Screen-off access granted. Tap Turn screen off to use it.</string>
+    <string name="admin_not_enabled">Screen-off access was not granted.</string>
+    <string name="admin_removed">Screen-off access removed.</string>
+    <string name="admin_lock_failed">Could not turn the screen off. Screen-off access may have been revoked.</string>
+    <string name="admin_unavailable">This device cannot open the administrator activation screen.</string>
 </resources>
