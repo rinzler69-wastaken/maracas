@@ -1,0 +1,4 @@
+<resources>
+    <!-- Follows system light/dark; on Android 12+ DeviceDefault picks up Material You dynamic colors -->
+    <style name="AppTheme" parent="android:Theme.DeviceDefault.DayNight" />
+</resources>
