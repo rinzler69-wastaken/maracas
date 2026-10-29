@@ -3,5 +3,7 @@
     <dimen name="gap">12dp</dimen>
     <dimen name="radius_header">28dp</dimen>
     <dimen name="radius_card">24dp</dimen>
-    <dimen name="radius_button">16dp</dimen>
+    <dimen name="radius_button">28dp</dimen>
+    <dimen name="sens_panel_height">154dp</dimen>
+    <dimen name="wake_card_height">106dp</dimen>
 </resources>

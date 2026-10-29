@@ -1,27 +1,40 @@
 <resources>
     <!-- Type scale: Display (app title) > Title (card + row titles) > Body > Label -->
-    <style name="TextAppearance.Maracas.AppTitle" parent="TextAppearance.Material3.HeadlineMedium">
-        <item name="android:textSize">32sp</item>
-        <item name="android:fontFamily">sans-serif-black</item>
-        <item name="android:letterSpacing">-0.02</item>
+    <!-- System-native typography: prefers Google Sans on Pixel / Android 12-17 OS -->
+    <style name="TextAppearance.Maracas.AppTitle" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textSize">22sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="fontFamily">google-sans</item>
+        <item name="android:fontFamily">google-sans</item>
+        <item name="android:letterSpacing">-0.01</item>
     </style>
     <style name="TextAppearance.Maracas.RowTitle" parent="TextAppearance.Material3.TitleMedium">
         <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textSize">16sp</item>
+        <item name="fontFamily">google-sans</item>
+        <item name="android:fontFamily">google-sans</item>
     </style>
     <style name="TextAppearance.Maracas.Secondary" parent="TextAppearance.Material3.BodyMedium">
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="fontFamily">google-sans</item>
+        <item name="android:fontFamily">google-sans</item>
     </style>
     <style name="TextAppearance.Maracas.Caption" parent="TextAppearance.Material3.BodySmall">
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="fontFamily">google-sans</item>
+        <item name="android:fontFamily">google-sans</item>
     </style>
-    <style name="TextAppearance.Maracas.StatusValue" parent="TextAppearance.Material3.TitleMedium">
+    <style name="TextAppearance.Maracas.StatusLabel" parent="TextAppearance.Material3.LabelLarge">
         <item name="android:textColor">?attr/colorOnSurface</item>
         <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.04</item>
+        <item name="fontFamily">google-sans</item>
+        <item name="android:fontFamily">google-sans</item>
     </style>
 
     <style name="ShapeAppearanceOverlay.Maracas.Button" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">@dimen/radius_button</item>
+        <item name="cornerSize">50%</item>
     </style>
 
     <style name="Widget.Maracas.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton.Icon">
@@ -29,6 +42,7 @@
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
         <item name="android:maxLines">3</item>
+        <item name="cornerRadius">28dp</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.Maracas.Button</item>
     </style>
 
@@ -36,5 +50,48 @@
         <item name="cardCornerRadius">@dimen/radius_card</item>
         <item name="cardElevation">0dp</item>
         <item name="strokeWidth">0dp</item>
+    </style>
+
+    <!-- Segmented grouped card items (Android 16 / Material 3 Expressive) -->
+    <!-- Top row has rounded top corners and flat (0dp) bottom; middle is completely flat (0dp); bottom has flat top (0dp) and rounded bottom -->
+    <style name="ShapeAppearance.Maracas.GroupItem.Top" parent="ShapeAppearance.Material3.Corner.None">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">@dimen/radius_card</item>
+        <item name="cornerSizeTopRight">@dimen/radius_card</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Maracas.GroupItem.Middle" parent="ShapeAppearance.Material3.Corner.None">
+        <item name="cornerSize">0dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Maracas.GroupItem.Bottom" parent="ShapeAppearance.Material3.Corner.None">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeTopRight">0dp</item>
+        <item name="cornerSizeBottomLeft">@dimen/radius_card</item>
+        <item name="cornerSizeBottomRight">@dimen/radius_card</item>
+    </style>
+
+    <style name="Widget.Maracas.Card.GroupTop" parent="Widget.Material3.CardView.Filled">
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Maracas.GroupItem.Top</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Maracas.GroupItem.Top</item>
+    </style>
+
+    <style name="Widget.Maracas.Card.GroupMiddle" parent="Widget.Material3.CardView.Filled">
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Maracas.GroupItem.Middle</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Maracas.GroupItem.Middle</item>
+    </style>
+
+    <style name="Widget.Maracas.Card.GroupBottom" parent="Widget.Material3.CardView.Filled">
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">0dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Maracas.GroupItem.Bottom</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Maracas.GroupItem.Bottom</item>
     </style>
 </resources>

@@ -1,23 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
-    android:clipToPadding="false"
-    android:fillViewport="true"
-    android:scrollbars="none">
+    android:background="?attr/colorSurface">
 
     <LinearLayout
+        android:id="@+id/contentLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingStart="@dimen/page_margin"
         android:paddingTop="8dp"
         android:paddingEnd="@dimen/page_margin"
         android:paddingBottom="16dp">
 
-        <!-- Header + master switch -->
+        <!-- 1. Header + master switch -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/headerCard"
             style="@style/Widget.Maracas.Card"
@@ -29,44 +28,34 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
+                android:minHeight="56dp"
                 android:orientation="horizontal"
-                android:padding="16dp">
+                android:paddingStart="20dp"
+                android:paddingTop="12dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="12dp">
 
-                <ImageView
-                    android:id="@+id/headerIcon"
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    android:importantForAccessibility="no"
-                    android:src="@mipmap/ic_launcher" />
-
-                <LinearLayout
+                <TextView
+                    android:id="@+id/headerTitle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="8dp">
-
-                    <TextView
-                        android:id="@+id/headerTitle"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/app_name"
-                        android:textAppearance="@style/TextAppearance.Maracas.AppTitle" />
-
-                    <TextView
-                        android:id="@+id/headerSubtitle"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/header_subtitle"
-                        android:textAppearance="?attr/textAppearanceBodyMedium" />
-                </LinearLayout>
+                    android:text="@string/app_name"
+                    android:textAppearance="@style/TextAppearance.Maracas.AppTitle" />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center_horizontal"
-                    android:orientation="vertical">
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/masterState"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="12dp"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textStyle="bold" />
 
                     <com.google.android.material.materialswitch.MaterialSwitch
                         android:id="@+id/masterSwitch"
@@ -74,77 +63,289 @@
                         android:layout_height="wrap_content"
                         android:minWidth="48dp"
                         android:minHeight="48dp"
+                        app:trackTint="@color/master_switch_track"
+                        app:thumbTint="@color/master_switch_thumb"
                         android:contentDescription="@string/master_cd"
                         android:saveEnabled="false" />
-
-                    <TextView
-                        android:id="@+id/masterState"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="?attr/textAppearanceLabelLarge" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Wake gesture settings -->
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.Maracas.Card"
+        <!-- 2. Wake method selector: two horizontal tiles -->
+        <TextView
+            android:id="@+id/tvWakeMethodHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginBottom="6dp"
+            android:text="@string/wake_method_title"
+            android:textAppearance="@style/TextAppearance.Maracas.Caption"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/layoutWakeSelector"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- Shake tile -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardWakeShake"
+                style="@style/Widget.Maracas.Card"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/wake_card_height"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                app:cardCornerRadius="20dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:paddingStart="14dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/ivShakeIcon"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_vibration" />
+
+                        <Space
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1" />
+
+                        <ImageView
+                            android:id="@+id/ivShakeCheck"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_marginEnd="4dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_check" />
+
+                        <ImageButton
+                            android:id="@+id/btnShakeInfo"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:padding="7dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_info" />
+                    </LinearLayout>
+
+                    <Space
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:minHeight="8dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="bottom"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvShakeTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/shake_title"
+                                android:textAppearance="@style/TextAppearance.Maracas.RowTitle"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvShakeSubtitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="@string/shake_subtitle"
+                                android:textAppearance="@style/TextAppearance.Maracas.Caption" />
+                        </LinearLayout>
+
+                        <ImageButton
+                            android:id="@+id/btnShakeAdjust"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:padding="7dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_tune" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <Space
+                android:layout_width="10dp"
+                android:layout_height="wrap_content" />
+
+            <!-- Lift tile -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardWakeLift"
+                style="@style/Widget.Maracas.Card"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/wake_card_height"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                app:cardCornerRadius="20dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:paddingStart="14dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/ivLiftIcon"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_mobile_theft" />
+
+                        <Space
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1" />
+
+                        <ImageView
+                            android:id="@+id/ivLiftCheck"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_marginEnd="4dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_check" />
+
+                        <ImageButton
+                            android:id="@+id/btnLiftInfo"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:padding="7dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_info" />
+                    </LinearLayout>
+
+                    <Space
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:minHeight="8dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="bottom"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvLiftTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/lift_title"
+                                android:textAppearance="@style/TextAppearance.Maracas.RowTitle"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvLiftSubtitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="@string/lift_subtitle"
+                                android:textAppearance="@style/TextAppearance.Maracas.Caption" />
+                        </LinearLayout>
+
+                        <ImageButton
+                            android:id="@+id/btnLiftAdjust"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:padding="7dp"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/ic_tune" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+
+        <!-- 3. Sensitivity Placeholder (shown when no Adjust option is selected) -->
+        <LinearLayout
+            android:id="@+id/layoutSensPlaceholder"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/sens_panel_height"
             android:layout_marginTop="@dimen/gap"
+            android:background="@drawable/bg_sens_placeholder"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingStart="24dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="16dp">
+
+            <TextView
+                android:id="@+id/tvSensPlaceholder"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:lineSpacingExtra="6dp"
+                android:textSize="15sp"
+                android:text="@string/sens_placeholder_text"
+                android:textAppearance="@style/TextAppearance.Maracas.Secondary"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+
+        <!-- 4. On-demand Shake Sensitivity panel (toggled via Shake Adjust button) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardShakeSens"
+            style="@style/Widget.Maracas.Card"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/sens_panel_height"
+            android:layout_marginTop="@dimen/gap"
+            android:visibility="gone"
             app:cardBackgroundColor="?attr/colorSurfaceContainer">
 
             <LinearLayout
+                android:id="@+id/layoutShakeSensContent"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp">
-
-                <include
-                    android:id="@+id/rowShake"
-                    layout="@layout/item_setting_row" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginStart="60dp"
-                    android:layout_marginEnd="16dp"
-                    android:background="?attr/colorOutlineVariant" />
-
-                <include
-                    android:id="@+id/rowPickup"
-                    layout="@layout/item_setting_row" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginStart="60dp"
-                    android:layout_marginEnd="16dp"
-                    android:background="?attr/colorOutlineVariant" />
-
-                <include
-                    android:id="@+id/rowPocket"
-                    layout="@layout/item_setting_row" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Shake sensitivity -->
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.Maracas.Card"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/gap"
-            app:cardBackgroundColor="?attr/colorSurfaceContainerHigh">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
                 android:orientation="vertical"
                 android:paddingStart="20dp"
-                android:paddingTop="8dp"
-                android:paddingEnd="8dp"
-                android:paddingBottom="16dp">
+                android:paddingTop="12dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="12dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -153,16 +354,18 @@
                     android:orientation="horizontal">
 
                     <TextView
+                        android:id="@+id/sensTitleValue"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/sens_title"
-                        android:textAppearance="@style/TextAppearance.Maracas.RowTitle" />
+                        android:textAppearance="@style/TextAppearance.Maracas.RowTitle"
+                        android:textStyle="bold" />
 
                     <ImageButton
                         android:id="@+id/sensInfo"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
+                        android:layout_marginEnd="-12dp"
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="12dp"
                         android:scaleType="fitCenter"
@@ -170,31 +373,23 @@
                         app:tint="?attr/colorOnSurfaceVariant" />
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/sensValue"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="-6dp"
-                    android:textAppearance="@style/TextAppearance.Maracas.StatusValue" />
-
                 <com.google.android.material.slider.Slider
                     android:id="@+id/sensSlider"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="-8dp"
-                    android:layout_marginEnd="8dp"
+                    android:layout_marginTop="4dp"
                     android:contentDescription="@string/sens_cd"
                     android:saveEnabled="false"
                     android:valueFrom="0.0"
                     android:valueTo="100.0"
                     app:labelBehavior="gone"
-                    app:tickVisible="false"
-                    app:trackColorInactive="?attr/colorOutline" />
+                    app:tickVisible="false" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp"
                     android:orientation="horizontal">
 
                     <TextView
@@ -207,7 +402,6 @@
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
                         android:layout_weight="1"
                         android:gravity="end"
                         android:text="@string/sens_end_high"
@@ -216,194 +410,245 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Status: proximity + battery -->
+        <!-- 5. On-demand Lift Sensitivity panel: Gentle vs Firm (toggled via Lift Adjust button) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardLiftSens"
+            style="@style/Widget.Maracas.Card"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/sens_panel_height"
+            android:layout_marginTop="@dimen/gap"
+            android:visibility="gone"
+            app:cardBackgroundColor="?attr/colorSurfaceContainer">
+
+            <LinearLayout
+                android:id="@+id/layoutLiftSensContent"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="vertical"
+                android:paddingStart="20dp"
+                android:paddingTop="12dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/lift_sens_title"
+                        android:textAppearance="@style/TextAppearance.Maracas.RowTitle"
+                        android:textStyle="bold" />
+
+                    <ImageButton
+                        android:id="@+id/btnLiftSensInfo"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginEnd="-8dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="12dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_info"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <!-- Gentle buttonlet -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnLiftGentle"
+                        style="@style/Widget.Maracas.Card"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardCornerRadius="16dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:gravity="center"
+                            android:orientation="horizontal"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp">
+
+                            <ImageView
+                                android:id="@+id/ivGentleCheck"
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:layout_marginEnd="6dp"
+                                android:importantForAccessibility="no"
+                                android:src="@drawable/ic_check" />
+
+                            <TextView
+                                android:id="@+id/tvGentleTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/lift_gentle"
+                                android:textAppearance="@style/TextAppearance.Maracas.StatusLabel" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <Space
+                        android:layout_width="10dp"
+                        android:layout_height="wrap_content" />
+
+                    <!-- Firm buttonlet -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnLiftFirm"
+                        style="@style/Widget.Maracas.Card"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        app:cardCornerRadius="16dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:gravity="center"
+                            android:orientation="horizontal"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp">
+
+                            <ImageView
+                                android:id="@+id/ivFirmCheck"
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:layout_marginEnd="6dp"
+                                android:importantForAccessibility="no"
+                                android:src="@drawable/ic_check" />
+
+                            <TextView
+                                android:id="@+id/tvFirmTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/lift_firm"
+                                android:textAppearance="@style/TextAppearance.Maracas.StatusLabel" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 5 & 6. Reach / Flip and Pocket Protection rows (Android 16 segmented group) -->
         <LinearLayout
+            android:id="@+id/groupProtection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/gap"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
             <com.google.android.material.card.MaterialCardView
-                style="@style/Widget.Maracas.Card"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="6dp"
-                android:layout_weight="1"
+                android:id="@+id/cardReachFlip"
+                style="@style/Widget.Maracas.Card.GroupTop"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="0dp"
                 app:cardBackgroundColor="?attr/colorSurfaceContainer">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:minHeight="24dp"
-                        android:text="@string/prox_title"
-                        android:textAppearance="@style/TextAppearance.Maracas.Caption" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <View
-                            android:id="@+id/proxDot"
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:layout_marginEnd="10dp"
-                            android:importantForAccessibility="no" />
-
-                        <TextView
-                            android:id="@+id/proxValue"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:textAppearance="@style/TextAppearance.Maracas.StatusValue" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/proxCaption"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:textAppearance="@style/TextAppearance.Maracas.Caption" />
-                </LinearLayout>
+                <include
+                    android:id="@+id/rowReachFlip"
+                    layout="@layout/item_setting_row" />
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
-                style="@style/Widget.Maracas.Card"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
+                android:id="@+id/cardPocket"
+                style="@style/Widget.Maracas.Card.GroupBottom"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                app:cardCornerRadius="0dp"
                 app:cardBackgroundColor="?attr/colorSurfaceContainer">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingStart="16dp"
-                    android:paddingTop="16dp"
-                    android:paddingEnd="16dp"
-                    android:paddingBottom="16dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:minHeight="24dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/battery_title"
-                            android:textAppearance="@style/TextAppearance.Maracas.Caption" />
-
-                        <!-- 48dp touch target, pulled into the card corner so the row stays compact -->
-                        <ImageButton
-                            android:id="@+id/batteryInfo"
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:layout_marginTop="-12dp"
-                            android:layout_marginEnd="-12dp"
-                            android:layout_marginBottom="-12dp"
-                            android:background="?attr/selectableItemBackgroundBorderless"
-                            android:padding="12dp"
-                            android:scaleType="fitCenter"
-                            android:src="@drawable/ic_info"
-                            app:tint="?attr/colorOnSurfaceVariant" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/batteryValue"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:textAppearance="@style/TextAppearance.Maracas.StatusValue" />
-
-                    <TextView
-                        android:id="@+id/batteryCaption"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:textAppearance="@style/TextAppearance.Maracas.Caption" />
-
-                    <TextView
-                        android:id="@+id/batteryOpt"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:textAppearance="@style/TextAppearance.Maracas.Caption" />
-                </LinearLayout>
+                <include
+                    android:id="@+id/rowPocket"
+                    layout="@layout/item_setting_row" />
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
-        <!-- Pushes the actions to the bottom on tall screens -->
+        <!-- 7. Proximity sensor status row -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardProx"
+            style="@style/Widget.Maracas.Card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/gap"
+            app:cardBackgroundColor="?attr/colorSurfaceContainer">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:minHeight="76dp"
+                android:orientation="horizontal"
+                android:paddingStart="20dp"
+                android:paddingTop="18dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="18dp">
+
+                <TextView
+                    android:id="@+id/proxTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/prox_title"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textAppearance="@style/TextAppearance.Maracas.RowTitle" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/proxStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="10dp"
+                        android:maxLines="1"
+                        android:textAppearance="@style/TextAppearance.Maracas.StatusLabel" />
+
+                    <View
+                        android:id="@+id/proxIndicator"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:importantForAccessibility="no" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Pushes the bottom action down on tall screens -->
         <Space
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:minHeight="16dp" />
 
-        <!-- Bottom actions -->
-        <LinearLayout
+        <!-- 8. Bottom action: Allow unrestricted battery (Single Pill Button) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnBattery"
+            style="?attr/materialButtonOutlinedStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_marginTop="12dp"
+            app:cornerRadius="28dp"
+            android:text="@string/action_battery"
+            app:icon="@drawable/ic_battery"
+            app:iconGravity="textStart" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnBattery"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="6dp"
-                android:layout_weight="1"
-                android:text="@string/action_battery"
-                app:icon="@drawable/ic_battery"
-                app:iconGravity="textStart" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnScreenOff"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:text="@string/action_screen_off"
-                app:icon="@drawable/ic_power"
-                app:iconGravity="textStart" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/adminStatus"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:paddingStart="4dp"
-                android:textAppearance="@style/TextAppearance.Maracas.Caption" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnAdminRemove"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:minHeight="48dp"
-                android:text="@string/admin_remove"
-                android:visibility="gone" />
-        </LinearLayout>
     </LinearLayout>
-</ScrollView>
+</FrameLayout>

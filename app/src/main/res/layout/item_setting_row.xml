@@ -3,54 +3,52 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="72dp"
+    android:minHeight="76dp"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingStart="20dp"
-    android:paddingEnd="8dp">
+    android:paddingStart="16dp"
+    android:paddingTop="18dp"
+    android:paddingEnd="12dp"
+    android:paddingBottom="18dp">
 
+    <!-- Circular container for the icon, matching Android 16/17 Settings style -->
     <ImageView
         android:id="@+id/rowIcon"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:background="@drawable/bg_row_icon"
+        android:padding="8dp"
+        android:scaleType="fitCenter"
         android:importantForAccessibility="no"
-        app:tint="?attr/colorOnSurfaceVariant" />
+        app:tint="?attr/colorOnSecondaryContainer" />
 
-    <!-- Tapping the text toggles the switch; the info button is a separate sibling so it never does. -->
+    <!-- Row labels: non-pressable; only the toggle and info buttons are interactive. -->
     <LinearLayout
         android:id="@+id/rowText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="false"
         android:importantForAccessibility="no"
-        android:minHeight="72dp"
         android:gravity="center_vertical"
         android:orientation="vertical"
         android:paddingStart="16dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp">
+        android:paddingTop="4dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="4dp">
 
         <TextView
             android:id="@+id/rowTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
             android:textAppearance="@style/TextAppearance.Maracas.RowTitle" />
 
         <TextView
-            android:id="@+id/rowSummary"
+            android:id="@+id/rowSubtitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:textAppearance="@style/TextAppearance.Maracas.Secondary" />
-
-        <TextView
-            android:id="@+id/rowNote"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
             android:textAppearance="@style/TextAppearance.Maracas.Caption"
             android:visibility="gone" />
     </LinearLayout>
@@ -71,6 +69,5 @@
         android:layout_height="wrap_content"
         android:minHeight="48dp"
         android:layout_marginStart="4dp"
-        android:layout_marginEnd="8dp"
         android:saveEnabled="false" />
 </LinearLayout>

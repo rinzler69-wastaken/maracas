@@ -2,6 +2,8 @@
     <!-- Material 3 DayNight. On Android 12+ MainActivity applies dynamic color on top of this;
          the palette below is the deliberate fallback for Android 8-11 and for dynamic color being off. -->
     <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="fontFamily">google-sans</item>
+        <item name="android:fontFamily">google-sans</item>
         <item name="colorPrimary">@color/maracas_primary</item>
         <item name="colorOnPrimary">@color/maracas_on_primary</item>
         <item name="colorPrimaryContainer">@color/maracas_primary_container</item>
