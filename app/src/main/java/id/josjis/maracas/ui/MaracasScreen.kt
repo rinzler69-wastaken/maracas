@@ -1,0 +1,193 @@
+package id.josjis.maracas.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import id.josjis.maracas.R
+import id.josjis.maracas.ui.components.AppearanceDialog
+import id.josjis.maracas.ui.components.BatteryOptimizationButton
+import id.josjis.maracas.ui.components.HeaderCard
+import id.josjis.maracas.ui.components.InfoDialog
+import id.josjis.maracas.ui.components.ProtectionSection
+import id.josjis.maracas.ui.components.ProximitySensorCard
+import id.josjis.maracas.ui.components.SensitivitySection
+import id.josjis.maracas.ui.components.ShakeActionsDialog
+import id.josjis.maracas.ui.components.WakeMethodSelector
+
+@Composable
+fun MaracasScreen(
+    uiState: MainUiState,
+    onToggleMaster: () -> Unit,
+    onToggleMaterialYou: (Boolean) -> Unit,
+    onSetTheme: (String) -> Unit,
+    onCycleThemeQuick: () -> Unit,
+    onSetThemeSystem: () -> Unit,
+    onToggleShake: () -> Unit,
+    onToggleLift: () -> Unit,
+    onToggleSensMode: (SensMode) -> Unit,
+    onSensChanged: (Int) -> Unit,
+    onSetShakeAction: (String) -> Unit,
+    onSetLiftSens: (String) -> Unit,
+    onToggleReachFlip: (Boolean) -> Unit,
+    onTogglePocket: (Boolean) -> Unit,
+    onRequestUnrestrictedBattery: () -> Unit,
+    onShowDialog: (ActiveDialog) -> Unit,
+    onDismissDialog: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val settings = uiState.settings
+    val pageMargin = dimensionResource(R.dimen.page_margin)
+
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        modifier = modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = pageMargin, top = 8.dp, end = pageMargin, bottom = 16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            // 1. Header Card (App Title, Master switch, Material You, Theme)
+            HeaderCard(
+                masterOn = settings.masterEnabled,
+                themeMode = settings.theme,
+                isDynamicColorAvailable = uiState.isDynamicColorAvailable,
+                onToggleMaster = onToggleMaster,
+                onOpenAppearance = { onShowDialog(ActiveDialog.Appearance) },
+                onCycleThemeQuick = onCycleThemeQuick,
+                onSetThemeSystem = onSetThemeSystem
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 2. Wake Method Selector (Shake & Lift tiles)
+            WakeMethodSelector(
+                masterOn = settings.masterEnabled,
+                shakeEnabled = settings.shakeEnabled,
+                liftEnabled = settings.liftEnabled,
+                expandedSensMode = uiState.expandedSensMode,
+                onToggleShake = onToggleShake,
+                onToggleLift = onToggleLift,
+                onAdjustShake = { onToggleSensMode(SensMode.SHAKE) },
+                onAdjustLift = { onToggleSensMode(SensMode.LIFT) },
+                onShowShakeInfo = {
+                    onShowDialog(ActiveDialog.Info(R.string.shake_title, R.string.shake_info))
+                },
+                onShowLiftInfo = {
+                    onShowDialog(ActiveDialog.Info(R.string.lift_title, R.string.lift_info))
+                }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 3. Sensitivity Section (Placeholder, Shake slider panel, or Lift buttonlets panel)
+            SensitivitySection(
+                masterOn = settings.masterEnabled,
+                shakeEnabled = settings.shakeEnabled,
+                liftEnabled = settings.liftEnabled,
+                expandedSensMode = uiState.expandedSensMode,
+                shakeSens = settings.currentSens,
+                shakeAction = settings.shakeAction,
+                liftSens = settings.liftSens,
+                onSensChanged = onSensChanged,
+                onOpenShakeActions = { onShowDialog(ActiveDialog.ShakeActions) },
+                onSetLiftSens = onSetLiftSens,
+                onShowShakeSensInfo = {
+                    onShowDialog(ActiveDialog.Info(R.string.sens_title, R.string.sens_info))
+                },
+                onShowLiftSensInfo = {
+                    onShowDialog(ActiveDialog.Info(R.string.lift_sens_title, R.string.lift_sens_info))
+                }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 4. Protection Rows (Reach / Flip & Pocket Protection)
+            ProtectionSection(
+                masterOn = settings.masterEnabled,
+                reachFlipEnabled = settings.reachFlip,
+                pocketEnabled = settings.pocket,
+                onToggleReachFlip = onToggleReachFlip,
+                onTogglePocket = onTogglePocket,
+                onShowReachFlipInfo = {
+                    onShowDialog(ActiveDialog.Info(R.string.reach_flip_title, R.string.reach_flip_info))
+                },
+                onShowPocketInfo = {
+                    onShowDialog(ActiveDialog.Info(R.string.pocket_protection_title, R.string.pocket_protection_info))
+                }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 5. Proximity Sensor Status Card
+            ProximitySensorCard(
+                masterOn = settings.masterEnabled,
+                proximityState = uiState.proximityState
+            )
+
+            // Pushes the bottom action down on tall screens
+            Spacer(
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 16.dp)
+            )
+
+            // 6. Bottom action: Allow unrestricted battery
+            BatteryOptimizationButton(
+                masterOn = settings.masterEnabled,
+                isBatteryUnrestricted = uiState.isBatteryUnrestricted,
+                onRequestUnrestrictedBattery = onRequestUnrestrictedBattery,
+                modifier = Modifier.padding(top = 12.dp)
+            )
+        }
+    }
+
+    // Active Dialogs
+    when (val dialog = uiState.activeDialog) {
+        ActiveDialog.Appearance -> {
+            AppearanceDialog(
+                initialMaterialYou = settings.materialYou,
+                initialTheme = settings.theme,
+                onApply = { my, theme ->
+                    onToggleMaterialYou(my)
+                    onSetTheme(theme)
+                },
+                onDismiss = onDismissDialog
+            )
+        }
+        ActiveDialog.ShakeActions -> {
+            ShakeActionsDialog(
+                currentAction = settings.shakeAction,
+                onSelectAction = onSetShakeAction,
+                onDismiss = onDismissDialog
+            )
+        }
+        is ActiveDialog.Info -> {
+            InfoDialog(
+                title = stringResource(dialog.titleRes),
+                message = stringResource(dialog.messageRes),
+                onDismiss = onDismissDialog
+            )
+        }
+        null -> Unit
+    }
+}
