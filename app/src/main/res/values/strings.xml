@@ -3,7 +3,19 @@
     <string name="state_on">ON</string>
     <string name="state_off">OFF</string>
     <string name="master_cd">Turn Maracas on or off</string>
+    <string name="material_you_cd">Toggle Material You</string>
+    <string name="theme_cd">Change theme</string>
+    <string name="appearance_cd">Appearance settings</string>
+    <string name="appearance_title">Appearance</string>
+    <string name="material_you_title">Material You</string>
+    <string name="material_you_subtitle">Dynamic colour from your wallpaper</string>
+    <string name="theme_section_title">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
     <string name="got_it">Got it</string>
+    <string name="done">Done</string>
+    <string name="theme_set_system">Theme set to System</string>
     <string name="info_cd">About %1$s</string>
 
     <!-- Material 3 typography tokens: override roboto default with system Google Sans -->
@@ -27,10 +39,14 @@
     <!-- Shake sensitivity -->
     <string name="sens_title">Shake sensitivity</string>
     <string name="sens_title_value">Shake Sensitivity • about %1$.1f g</string>
-    <string name="sens_end_low">Low · harder shake</string>
-    <string name="sens_end_high">High · lighter shake</string>
+    <string name="sens_end_low">Low</string>
+    <string name="sens_end_high">High</string>
     <string name="sens_cd">Shake sensitivity slider</string>
     <string name="sens_info">The slider moves the shake threshold between about 4.0 g at the left (low sensitivity, a hard shake is needed) and 1.8 g at the right (high sensitivity, a light shake is enough). 1 g is the pull of normal gravity. It only affects Shake to wake.</string>
+    <string name="action_button_label">Actions</string>
+    <string name="shake_action_dialog_title">Action on shake</string>
+    <string name="action_default">Default</string>
+    <string name="action_flashlight">Flashlight</string>
 
     <!-- Lift sensitivity buttonlets -->
     <string name="lift_sens_title">Lift sensitivity</string>
@@ -57,7 +73,7 @@
     <string name="status_unavailable">Unavailable</string>
 
     <!-- Sensitivity placeholder -->
-    <string name="sens_placeholder_text">Press {adjust} button on either Wake methods to configure sensitivity.</string>
+    <string name="sens_placeholder_text">Press {adjust} button on either Wake methods to configure sensitivity or actions.</string>
 
     <!-- Bottom action -->
     <string name="action_battery">Allow unrestricted battery</string>

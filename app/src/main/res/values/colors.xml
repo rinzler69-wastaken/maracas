@@ -1,34 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Maracas accent, kept from the original app -->
+    <!--
+      Material 3 baseline fallback. Android 12+ with Monet enabled resolves the
+      live system_accent*/system_neutral* tonal palettes at runtime instead.
+      Keep the legacy yellow only for the FAR/NEAR proximity indicator.
+    -->
     <color name="maracas_yellow">#FFC107</color>
 
-    <!-- Light fallback palette (amber seed) -->
-    <color name="maracas_primary">#7B5800</color>
+    <color name="maracas_primary">#6750A4</color>
     <color name="maracas_on_primary">#FFFFFF</color>
-    <color name="maracas_primary_container">#FFDEA6</color>
-    <color name="maracas_on_primary_container">#271900</color>
-    <color name="maracas_secondary">#6D5C3F</color>
+    <color name="maracas_primary_container">#EADDFF</color>
+    <color name="maracas_on_primary_container">#21005D</color>
+
+    <color name="maracas_secondary">#625B71</color>
     <color name="maracas_on_secondary">#FFFFFF</color>
-    <color name="maracas_secondary_container">#F7E0BC</color>
-    <color name="maracas_on_secondary_container">#251A04</color>
-    <color name="maracas_tertiary">#4B6546</color>
+    <color name="maracas_secondary_container">#E8DEF8</color>
+    <color name="maracas_on_secondary_container">#1D192B</color>
+
+    <color name="maracas_tertiary">#7D5260</color>
     <color name="maracas_on_tertiary">#FFFFFF</color>
-    <color name="maracas_tertiary_container">#CDEBC4</color>
-    <color name="maracas_on_tertiary_container">#082008</color>
-    <color name="maracas_error">#BA1A1A</color>
+    <color name="maracas_tertiary_container">#FFD8E4</color>
+    <color name="maracas_on_tertiary_container">#31111D</color>
+
+    <color name="maracas_error">#B3261E</color>
     <color name="maracas_on_error">#FFFFFF</color>
-    <color name="maracas_error_container">#FFDAD6</color>
-    <color name="maracas_on_error_container">#410002</color>
-    <color name="maracas_surface">#FFF8F2</color>
-    <color name="maracas_on_surface">#1F1B13</color>
-    <color name="maracas_surface_variant">#EDE1CF</color>
-    <color name="maracas_on_surface_variant">#4E4639</color>
-    <color name="maracas_outline">#807667</color>
-    <color name="maracas_outline_variant">#D0C5B4</color>
+    <color name="maracas_error_container">#F9DEDC</color>
+    <color name="maracas_on_error_container">#410E0B</color>
+
+    <color name="maracas_surface">#FEF7FF</color>
+    <color name="maracas_on_surface">#1D1B20</color>
+    <color name="maracas_surface_variant">#E7E0EC</color>
+    <color name="maracas_on_surface_variant">#49454F</color>
+    <color name="maracas_outline">#79747E</color>
+    <color name="maracas_outline_variant">#CAC4D0</color>
     <color name="maracas_container_lowest">#FFFFFF</color>
-    <color name="maracas_container_low">#FBF2E6</color>
-    <color name="maracas_container">#F5ECDF</color>
-    <color name="maracas_container_high">#EFE6D9</color>
-    <color name="maracas_container_highest">#E9E1D4</color>
+    <color name="maracas_container_low">#F7F2FA</color>
+    <color name="maracas_container">#F3EDF7</color>
+    <color name="maracas_container_high">#ECE6F0</color>
+    <color name="maracas_container_highest">#E6E0E9</color>
+
+    <!-- Baseline Material 3 tonal samples used when the Android Monet engine is unavailable. -->
+    <color name="maracas_primary_tone20">#381E72</color>
+    <color name="maracas_primary_tone25">#443080</color>
+    <color name="maracas_primary_tone30">#4F378B</color>
+    <color name="maracas_primary_tone75">#C8B2FB</color>
+    <color name="maracas_primary_tone90">#EADDFF</color>
+    <color name="maracas_primary_tone95">#F6EDFF</color>
+    <color name="maracas_secondary_tone30">#4A4458</color>
+    <color name="maracas_secondary_tone95">#F6EDFF</color>
+    <color name="maracas_tertiary_tone20">#492532</color>
+    <color name="maracas_tertiary_tone30">#633B48</color>
+    <color name="maracas_tertiary_tone90">#FFD8E4</color>
+    <color name="maracas_tertiary_tone95">#FFECF1</color>
 </resources>

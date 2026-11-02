@@ -19,8 +19,7 @@
         android:background="@drawable/bg_row_icon"
         android:padding="8dp"
         android:scaleType="fitCenter"
-        android:importantForAccessibility="no"
-        app:tint="?attr/colorOnSecondaryContainer" />
+        android:importantForAccessibility="no" />
 
     <!-- Row labels: non-pressable; only the toggle and info buttons are interactive. -->
     <LinearLayout
@@ -60,8 +59,7 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="12dp"
         android:scaleType="fitCenter"
-        android:src="@drawable/ic_info"
-        app:tint="?attr/colorOnSurfaceVariant" />
+        android:src="@drawable/ic_info" />
 
     <com.google.android.material.materialswitch.MaterialSwitch
         android:id="@+id/rowSwitch"

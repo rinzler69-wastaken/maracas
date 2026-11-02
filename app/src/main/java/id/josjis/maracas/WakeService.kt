@@ -11,8 +11,12 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.os.PowerManager
 import androidx.core.app.ServiceCompat
 import kotlin.math.abs
@@ -29,8 +33,9 @@ class WakeService : Service(), SensorEventListener {
     private var shakeCount = 0
     private var lastShake = 0L
     private var shakeThreshold = 3.0f      // in g (lower = more sensitive)
+    private var shakeAction = "default"    // "default" | "flashlight"
 
-    // Lift detector state
+    // Lift detector state (strictly for wake)
     private var liftEnabled = true
     private var liftFirm = false
     private var liftArmed = false
@@ -51,8 +56,35 @@ class WakeService : Service(), SensorEventListener {
     private var pocketProtection = true
     private var near = false
 
-    // General cooldown
+    // General cooldown – updated only by wake() itself
     private var lastWake = 0L
+    // Timestamp of last shake-initiated action (separate from lastWake so wake() isn't pre-poisoned)
+    private var lastShakeActionTime = 0L
+    // Timestamp of last wake triggered by Lift or Reach/Flip (used to dampen flashlight collisions)
+    private var lastNonShakeWakeTime = 0L
+
+    // Flashlight state
+    private var isTorchOn = false
+    private var torchCameraId: String? = null
+    private var torchCallbackRegistered = false
+
+    private val torchCallback = object : CameraManager.TorchCallback() {
+        override fun onTorchModeChanged(cameraId: String, enabled: Boolean) {
+            // Adopt whichever camera the system actually uses for torch
+            if (torchCameraId == null || enabled) {
+                torchCameraId = cameraId
+            }
+            if (cameraId == torchCameraId) {
+                isTorchOn = enabled
+            }
+        }
+
+        override fun onTorchModeUnavailable(cameraId: String) {
+            if (cameraId == torchCameraId) {
+                isTorchOn = false
+            }
+        }
+    }
 
     // Fallback gravity filter if linear acceleration sensor is unavailable
     private var hasLinearSensor = false
@@ -78,6 +110,7 @@ class WakeService : Service(), SensorEventListener {
         val masterEnabled = p.getBoolean("enabled", false)
 
         shakeEnabled = p.getBoolean("shake", true)
+        shakeAction = p.getString("shake_action", "default") ?: "default"
         liftEnabled = p.getBoolean("lift", true)
         liftFirm = p.getString("lift_sens", "gentle") == "firm"
         reachFlipEnabled = p.getBoolean("reach_flip", p.getBoolean("pickup", true))
@@ -85,6 +118,9 @@ class WakeService : Service(), SensorEventListener {
 
         // Shake slider 0..100 -> threshold 4.0g (hard) .. 1.8g (light)
         shakeThreshold = 4.0f - 2.2f * (p.getInt("sens", 50) / 100f)
+        if (shakeAction == "flashlight") {
+            shakeThreshold = shakeThreshold.coerceAtLeast(3.0f)
+        }
 
         val anyModeActive = masterEnabled && (shakeEnabled || liftEnabled || reachFlipEnabled)
         if (!anyModeActive) {
@@ -119,7 +155,44 @@ class WakeService : Service(), SensorEventListener {
             prox?.let { sm.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
         }
 
+        // Setup flashlight callback if needed
+        ensureTorchSetup()
+
         return START_STICKY
+    }
+
+    private fun ensureTorchSetup() {
+        try {
+            val cm = getSystemService(Context.CAMERA_SERVICE) as? CameraManager ?: return
+            if (!torchCallbackRegistered) {
+                cm.registerTorchCallback(torchCallback, Handler(Looper.getMainLooper()))
+                torchCallbackRegistered = true
+            }
+            if (torchCameraId == null) {
+                val hasZero = try {
+                    val chars = cm.getCameraCharacteristics("0")
+                    chars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true &&
+                        chars.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK
+                } catch (_: Exception) { false }
+
+                if (hasZero) {
+                    torchCameraId = "0"
+                } else {
+                    for (id in cm.cameraIdList) {
+                        val chars = cm.getCameraCharacteristics(id)
+                        val flashAvailable = chars.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
+                        val facing = chars.get(CameraCharacteristics.LENS_FACING)
+                        if (flashAvailable && facing == CameraCharacteristics.LENS_FACING_BACK) {
+                            torchCameraId = id
+                            break
+                        }
+                    }
+                    if (torchCameraId == null && cm.cameraIdList.isNotEmpty()) {
+                        torchCameraId = cm.cameraIdList[0]
+                    }
+                }
+            }
+        } catch (_: Exception) {}
     }
 
     override fun onSensorChanged(e: SensorEvent) {
@@ -150,7 +223,7 @@ class WakeService : Service(), SensorEventListener {
                                 lastShake = now
                                 if (++shakeCount >= 3) {
                                     shakeCount = 0
-                                    wake()
+                                    executeShakeAction()
                                     return
                                 }
                             }
@@ -175,6 +248,7 @@ class WakeService : Service(), SensorEventListener {
                 if (reachFlipEnabled && pendingReachFlipUntil > now && !pm.isInteractive) {
                     if (checkReachOrFlip(now)) {
                         pendingReachFlipUntil = 0L
+                        lastNonShakeWakeTime = now
                         wake()
                     }
                 }
@@ -206,6 +280,7 @@ class WakeService : Service(), SensorEventListener {
                 // Reach / Flip: near-to-far transition verified with physical motion or flip rotation
                 if (reachFlipEnabled && wasNear && !near && !pm.isInteractive) {
                     if (checkReachOrFlip(now)) {
+                        lastNonShakeWakeTime = now
                         wake()
                     } else {
                         // Arm short window to allow completing the flip rotation or extraction movement
@@ -213,6 +288,39 @@ class WakeService : Service(), SensorEventListener {
                     }
                 }
             }
+        }
+    }
+
+    private fun executeShakeAction() {
+        val now = System.currentTimeMillis()
+        // Use a separate shake cooldown so we never pre-poison lastWake before calling wake().
+        // (Previously lastWake = now was set here, causing wake()'s own guard to immediately bail.)
+        if (now - lastShakeActionTime < 1500) return
+        lastShakeActionTime = now
+
+        when (shakeAction) {
+            "flashlight" -> {
+                // Guard against accidental collision with Lift / Reach-Flip:
+                // those triggers set lastNonShakeWakeTime just before acquiring the wakelock.
+                // If a non-shake wake happened within the last 1000 ms, the motion that
+                // caused it likely also crossed our shake threshold — suppress the flashlight.
+                if (now - lastNonShakeWakeTime < 1000L) return
+                toggleFlashlight()
+            }
+            else -> wake()   // "default": wake() has its own lastWake guard — no conflict now
+        }
+    }
+
+    private fun toggleFlashlight() {
+        try {
+            ensureTorchSetup()
+            val cm = getSystemService(Context.CAMERA_SERVICE) as? CameraManager ?: return
+            val id = torchCameraId ?: return
+            val target = !isTorchOn
+            cm.setTorchMode(id, target)
+            isTorchOn = target
+        } catch (_: Exception) {
+            isTorchOn = false
         }
     }
 
@@ -264,9 +372,7 @@ class WakeService : Service(), SensorEventListener {
         restStartTime = 0L
         if (!liftArmed) return
 
-        // Pickup threshold: Gentle vs Firm
-        // Gentle: lighter pickup movement (~1.3 m/s²)
-        // Firm: pronounced pickup movement (~2.6 m/s²)
+        // Pickup threshold: Gentle vs Firm (Lift is strictly for wake)
         val triggerThreshold = if (liftFirm) 2.6f else 1.3f
 
         if (mag >= triggerThreshold) {
@@ -276,6 +382,8 @@ class WakeService : Service(), SensorEventListener {
                 // Plausible sustained pickup movement detected
                 liftArmed = false
                 liftMotionStartTime = 0L
+                // Stamp non-shake wake so flashlight action knows lift just fired
+                lastNonShakeWakeTime = System.currentTimeMillis()
                 wake()
             }
         }
@@ -283,7 +391,7 @@ class WakeService : Service(), SensorEventListener {
 
     private fun wake() {
         val now = System.currentTimeMillis()
-        if (now - lastWake < 2000) return
+        if (now - lastWake < 1500) return
         lastWake = now
         pendingReachFlipUntil = 0L
         pm.newWakeLock(
@@ -295,6 +403,12 @@ class WakeService : Service(), SensorEventListener {
     override fun onAccuracyChanged(s: Sensor?, a: Int) {}
 
     override fun onDestroy() {
+        if (torchCallbackRegistered) {
+            try {
+                (getSystemService(Context.CAMERA_SERVICE) as? CameraManager)?.unregisterTorchCallback(torchCallback)
+            } catch (_: Exception) {}
+            torchCallbackRegistered = false
+        }
         sm.unregisterListener(this)
         cpuLock?.release()
         cpuLock = null

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Brightness auto: half-sun / half-moon split circle -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Left half filled (moon side) -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M12,3 A9,9 0 0,0 12,21 Z" />
+    <!-- Right half outline (sun side) -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.8"
+        android:pathData="M12,3 A9,9 0 0,1 12,21 Z" />
+    <!-- Sun rays on right -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M12,1.5 v1.5 M17.2,3.8 l-1.06,1.06 M20,9 h-1.5 M17.2,20.2 l-1.06,-1.06 M12,22.5 v-1.5" />
+</vector>

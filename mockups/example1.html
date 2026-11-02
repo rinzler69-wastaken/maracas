@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Maracas UI - Full Active Header & Material You Tints</title>
+<style>
+  :root {
+    --bg-canvas: #1C080A;
+    --surface-base: #280E11;
+    
+    /* Primary (Coral) */
+    --primary: #FF8975;
+    --on-primary: #3B0905;
+    --primary-tint: rgba(255, 137, 117, 0.22);
+    --primary-border: rgba(255, 137, 117, 0.52);
+
+    /* Secondary (Soft Lavender-Rose from Expressive Clock) */
+    --secondary: #D79CE8;
+    --on-secondary: #320942;
+    --secondary-tint: rgba(215, 156, 232, 0.18);
+    --secondary-border: rgba(215, 156, 232, 0.45);
+
+    /* Tertiary (Warm Amber-Gold / Peach) */
+    --tertiary: #FFB77C;
+    --on-tertiary: #3E1C00;
+    --tertiary-tint: rgba(255, 183, 124, 0.20);
+    --tertiary-border: rgba(255, 183, 124, 0.50);
+
+    --text-light: #FCEAE6;
+    --text-muted: #C9A6A1;
+    --amber-led: #F5B041;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+  body {
+    background: #110405;
+    color: var(--text-light);
+    display: flex;
+    justify-content: center;
+    gap: 36px;
+    padding: 28px 16px;
+    flex-wrap: wrap;
+  }
+
+  .col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .badge-header {
+    font-size: 12.5px; font-weight: 600; color: var(--primary);
+    background: rgba(255,137,117,0.12); border: 1px solid rgba(255,137,117,0.35);
+    padding: 6px 14px; border-radius: 99px;
+  }
+
+  .phone {
+    width: 344px;
+    background: var(--bg-canvas);
+    border-radius: 38px;
+    padding: 20px 14px 18px;
+    border: 2px solid #3A171B;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+
+  /* 1. TOP MARACAS ROW: Brightened tint + border + ALL 3 buttons bright */
+  .maracas-row {
+    height: 62px;
+    border-radius: 31px;
+    padding: 0 10px 0 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, rgba(255,137,117,0.28) 0%, rgba(255,137,117,0.12) 100%);
+    box-shadow: inset 0 1px 0 rgba(255,137,117,0.65), 0 0 0 1.2px var(--primary-border);
+  }
+  .maracas-title { font-size: 20px; font-weight: 700; color: var(--text-light); }
+  .top-btn-group { display: flex; gap: 8px; }
+  .top-btn {
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700;
+    background: var(--primary);
+    color: var(--on-primary);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+  /* Optional Material You variation on the right phone */
+  .top-btn.sec { background: var(--secondary); color: var(--on-secondary); }
+  .top-btn.tert { background: var(--tertiary); color: var(--on-tertiary); }
+
+  /* 2. WAKE PADS (Shake & Lift) */
+  .wake-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .wake-pad {
+    height: 118px;
+    border-radius: 22px;
+    padding: 13px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: linear-gradient(145deg, var(--primary-tint) 0%, rgba(40,14,17,0.92) 85%);
+    box-shadow: inset 0 1px 0 rgba(255,137,117,0.55), 0 0 0 1px var(--primary-border);
+  }
+  /* Material You Secondary Pad option */
+  .wake-pad.my-secondary {
+    background: linear-gradient(145deg, var(--secondary-tint) 0%, rgba(36,14,42,0.92) 85%);
+    box-shadow: inset 0 1px 0 rgba(215,156,232,0.55), 0 0 0 1px var(--secondary-border);
+  }
+  /* Selected for Sensitivity Tuning */
+  .wake-pad.tuning-active {
+    background: linear-gradient(145deg, var(--tertiary-tint) 0%, rgba(45,20,12,0.94) 85%);
+    box-shadow: inset 0 1.5px 0 var(--tertiary), 0 0 0 1.5px var(--tertiary);
+  }
+
+  .pad-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .squircle {
+    width: 34px; height: 34px; border-radius: 11px;
+    background: var(--primary); color: var(--on-primary);
+    display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700;
+  }
+  .squircle.sec { background: var(--secondary); color: var(--on-secondary); }
+  .squircle.tert { background: var(--tertiary); color: var(--on-tertiary); }
+
+  .pad-status { display: flex; gap: 7px; font-size: 13px; color: var(--primary); }
+  .pad-status.sec { color: var(--secondary); }
+  .pad-status.tert { color: var(--tertiary); }
+
+  .pad-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
+  .pad-title { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+  .pad-sub { font-size: 11px; color: var(--text-muted); }
+
+  .tune-btn {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+    background: rgba(255,137,117,0.14);
+    border: 1px solid var(--primary-border);
+    color: var(--primary);
+  }
+  .tune-btn.sec {
+    background: rgba(215,156,232,0.14);
+    border: 1px solid var(--secondary-border);
+    color: var(--secondary);
+  }
+  .tune-btn.selected {
+    background: var(--tertiary);
+    color: var(--on-tertiary);
+    border: none;
+  }
+
+  /* 3. FIXED SENSITIVITY / IDLE BOX */
+  .inspector-box {
+    height: 110px;
+    border-radius: 22px;
+    padding: 15px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .inspector-box.idle {
+    border: 1.5px dashed rgba(255,137,117,0.28);
+    background: rgba(40,14,17,0.45);
+    align-items: center;
+    text-align: center;
+  }
+  .inspector-box.active-tuning {
+    background: linear-gradient(160deg, var(--tertiary-tint) 0%, rgba(36,15,12,0.95) 90%);
+    box-shadow: inset 0 1px 0 rgba(255,183,124,0.5), 0 0 0 1.2px var(--tertiary-border);
+    justify-content: space-between;
+  }
+
+  .idle-text { font-size: 12.5px; color: var(--text-muted); line-height: 1.45; transition: opacity 0.4s ease; }
+  .stats-line {
+    font-size: 12.5px; font-weight: 600; color: var(--text-light);
+    padding: 6px 12px; border-radius: 10px;
+    background: rgba(255,137,117,0.12); border: 1px solid rgba(255,137,117,0.28);
+    margin-top: 5px; display: inline-block;
+  }
+
+  .deck-head { display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; color: var(--text-light); }
+  .slider-row { display: flex; align-items: center; gap: 14px; }
+  .slider-wrap { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+  .slider-track { height: 14px; border-radius: 7px; background: var(--tertiary); width: 90%; position: relative; }
+  .slider-thumb { position: absolute; right: -6px; top: -6px; width: 3px; height: 26px; background: var(--tertiary); border-radius: 2px; }
+  .slider-lbls { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); }
+  .action-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .action-circle {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--tertiary); color: var(--on-tertiary);
+    display: flex; align-items: center; justify-content: center; font-size: 15px;
+  }
+
+  /* 4. REACH/FLIP & POCKET PROTECTION: Brightened tint & border when active */
+  .env-group {
+    border-radius: 22px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-base);
+    box-shadow: inset 0 1px 0 rgba(215,156,232,0.35), 0 0 0 1px var(--secondary-border);
+  }
+  .env-row {
+    padding: 13px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(90deg, var(--secondary-tint) 0%, rgba(40,14,17,0.85) 100%);
+  }
+  .env-row + .env-row { border-top: 1px solid rgba(215,156,232,0.18); }
+  .env-row.primary-toned {
+    background: linear-gradient(90deg, rgba(255,137,117,0.15) 0%, rgba(40,14,17,0.9) 100%);
+  }
+  .row-text { flex: 1; }
+  .row-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .row-sub { font-size: 11px; color: var(--text-muted); line-height: 1.25; }
+
+  .switch-on {
+    width: 44px; height: 24px; border-radius: 12px;
+    background: var(--secondary); position: relative; flex-shrink: 0;
+  }
+  .switch-on.pri { background: var(--primary); }
+  .switch-knob {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--on-secondary); position: absolute; right: 3px; top: 3px;
+  }
+  .switch-on.pri .switch-knob { background: var(--on-primary); }
+
+  /* 5. PROXIMITY & BOTTOM PILL */
+  .prox-card {
+    height: 50px; border-radius: 18px;
+    background: var(--surface-base);
+    border: 1px solid rgba(255,137,117,0.14);
+    padding: 0 16px;
+    display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 500;
+  }
+  .prox-right { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; }
+  .prox-led { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--amber-led); }
+
+  .bottom-pill {
+    height: 44px; border-radius: 22px;
+    background: rgba(40,14,17,0.6);
+    border: 1px solid rgba(255,137,117,0.22);
+    padding: 0 16px;
+    display: flex; align-items: center; gap: 10px; overflow: hidden;
+  }
+  .pill-text { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+</style>
+</head>
+<body>
+
+  <!-- LEFT: Material You OFF (Static Tonal Coral, All 3 Top Buttons Bright) -->
+  <div class="col">
+    <div class="badge-header">1. Static Tonal Palette (Idle Summary Cycling)</div>
+    <div class="phone">
+      <!-- Maracas Row: Brightened Tint + Border + All 3 Buttons Lit -->
+      <div class="maracas-row">
+        <span class="maracas-title">Maracas</span>
+        <div class="top-btn-group">
+          <div class="top-btn">⏻</div>
+          <div class="top-btn">Ⓜ</div>
+          <div class="top-btn">🌙</div>
+        </div>
+      </div>
+
+      <!-- Shake & Lift: Active Tints & Borders -->
+      <div class="wake-grid">
+        <div class="wake-pad">
+          <div class="pad-top">
+            <div class="squircle">📳</div>
+            <div class="pad-status"><span>✓</span><span>ⓘ</span></div>
+          </div>
+          <div class="pad-bottom">
+            <div>
+              <div class="pad-title">Shake</div>
+              <div class="pad-sub">Shake to wake</div>
+            </div>
+            <div class="tune-btn">🎚️</div>
+          </div>
+        </div>
+
+        <div class="wake-pad">
+          <div class="pad-top">
+            <div class="squircle">🤳</div>
+            <div class="pad-status"><span>✓</span><span>ⓘ</span></div>
+          </div>
+          <div class="pad-bottom">
+            <div>
+              <div class="pad-title">Lift</div>
+              <div class="pad-sub">Pick up to wake</div>
+            </div>
+            <div class="tune-btn">🎚️</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Idle Box: Clean Wording Crossfade -->
+      <div class="inspector-box idle">
+        <div id="idleBoxText" class="idle-text">
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:2px;">Current settings</div>
+          <div class="stats-line">Shake: ~3.0 g (Flashlight) &nbsp;•&nbsp; Lift: Gentle</div>
+        </div>
+      </div>
+
+      <!-- Reach/Flip & PocketProt: Active Tint & Border -->
+      <div class="env-group" style="box-shadow: inset 0 1px 0 rgba(255,137,117,0.35), 0 0 0 1px var(--primary-border);">
+        <div class="env-row primary-toned">
+          <div class="squircle">📱</div>
+          <div class="row-text">
+            <div class="row-title">Reach / Flip</div>
+            <div class="row-sub">Retrieve from pocket or turn phone face-up</div>
+          </div>
+          <span style="color:var(--text-muted);font-size:14px;">ⓘ</span>
+          <div class="switch-on pri"><div class="switch-knob"></div></div>
+        </div>
+        <div class="env-row primary-toned" style="border-top-color: rgba(255,137,117,0.16);">
+          <div class="squircle">🛡️</div>
+          <div class="row-text">
+            <div class="row-title">Pocket Protection</div>
+            <div class="row-sub">Suppress wakes while stowed</div>
+          </div>
+          <span style="color:var(--text-muted);font-size:14px;">ⓘ</span>
+          <div class="switch-on pri"><div class="switch-knob"></div></div>
+        </div>
+      </div>
+
+      <div class="prox-card">
+        <span>Proximity Sensor</span>
+        <div class="prox-right"><span>FAR</span><div class="prox-led"></div></div>
+      </div>
+
+      <div class="bottom-pill">
+        <span style="color:var(--primary);font-size:13px;">🔋</span>
+        <span class="pill-text">Unrestricted battery allowed • Hold this button to revoke</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Material You ON (Expressive / Fruit Salad Multi-Tone Distribution) -->
+  <div class="col">
+    <div class="badge-header">2. Material You Active (Primary / Secondary / Tertiary Split)</div>
+    <div class="phone">
+      <!-- Maracas Row: Brightened Tint + All 3 Buttons Lit (Showing Dynamic Triad) -->
+      <div class="maracas-row">
+        <span class="maracas-title">Maracas</span>
+        <div class="top-btn-group">
+          <div class="top-btn" title="Master Power (Primary)">⏻</div>
+          <div class="top-btn sec" title="Material You Enabled (Secondary)">Ⓜ</div>
+          <div class="top-btn tert" title="Theme (Tertiary)">🌙</div>
+        </div>
+      </div>
+
+      <!-- Shake (Selected for Tuning -> Tertiary) & Lift (Active -> Primary/Secondary) -->
+      <div class="wake-grid">
+        <div class="wake-pad tuning-active">
+          <div class="pad-top">
+            <div class="squircle tert">📳</div>
+            <div class="pad-status tert"><span>✓</span><span>ⓘ</span></div>
+          </div>
+          <div class="pad-bottom">
+            <div>
+              <div class="pad-title">Shake</div>
+              <div class="pad-sub">Shake to wake</div>
+            </div>
+            <div class="tune-btn selected">🎚️</div>
+          </div>
+        </div>
+
+        <div class="wake-pad">
+          <div class="pad-top">
+            <div class="squircle">🤳</div>
+            <div class="pad-status"><span>✓</span><span>ⓘ</span></div>
+          </div>
+          <div class="pad-bottom">
+            <div>
+              <div class="pad-title">Lift</div>
+              <div class="pad-sub">Pick up to wake</div>
+            </div>
+            <div class="tune-btn">🎚️</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Sensitivity Box: Highlighted in Tertiary to match selected Shake pad -->
+      <div class="inspector-box active-tuning">
+        <div class="deck-head">
+          <span>Shake Sensitivity • about 3.0 g</span>
+          <span style="color:var(--text-muted);font-weight:400;">ⓘ</span>
+        </div>
+        <div class="slider-row">
+          <div class="slider-wrap">
+            <div class="slider-track"><div class="slider-thumb"></div></div>
+            <div class="slider-lbls"><span>Low</span><span>High</span></div>
+          </div>
+          <div class="action-wrap">
+            <div class="action-circle">🔦</div>
+            <span style="font-size:10px;color:var(--text-muted);">Actions</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reach/Flip & PocketProt: Styled with Material You Secondary (Lavender-Rose) -->
+      <div class="env-group">
+        <div class="env-row">
+          <div class="squircle sec">📱</div>
+          <div class="row-text">
+            <div class="row-title">Reach / Flip</div>
+            <div class="row-sub">Retrieve from pocket or turn phone face-up</div>
+          </div>
+          <span style="color:var(--text-muted);font-size:14px;">ⓘ</span>
+          <div class="switch-on"><div class="switch-knob"></div></div>
+        </div>
+        <div class="env-row">
+          <div class="squircle sec">🛡️</div>
+          <div class="row-text">
+            <div class="row-title">Pocket Protection</div>
+            <div class="row-sub">Suppress wakes while stowed</div>
+          </div>
+          <span style="color:var(--text-muted);font-size:14px;">ⓘ</span>
+          <div class="switch-on"><div class="switch-knob"></div></div>
+        </div>
+      </div>
+
+      <div class="prox-card">
+        <span>Proximity Sensor</span>
+        <div class="prox-right"><span>FAR</span><div class="prox-led"></div></div>
+      </div>
+
+      <div class="bottom-pill" style="border-color: var(--secondary-border);">
+        <span style="color:var(--tertiary);font-size:13px;">🌙</span>
+        <span class="pill-text">Hold the Theme button for System theme • Tap once for Light/Dark</span>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
