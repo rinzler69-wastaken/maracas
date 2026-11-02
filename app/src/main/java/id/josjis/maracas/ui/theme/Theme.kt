@@ -9,6 +9,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.google.android.material.color.DynamicColors
 
@@ -93,14 +94,16 @@ fun MaracasTheme(
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
             DynamicColors.isDynamicColorAvailable()
 
-    val colorScheme = when {
-        canUseDynamic && darkTheme -> dynamicDarkColorScheme(context)
-        canUseDynamic && !darkTheme -> dynamicLightColorScheme(context)
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    val colorScheme = remember(canUseDynamic, darkTheme, context) {
+        when {
+            canUseDynamic && darkTheme -> dynamicDarkColorScheme(context)
+            canUseDynamic && !darkTheme -> dynamicLightColorScheme(context)
+            darkTheme -> DarkColorScheme
+            else -> LightColorScheme
+        }
     }
 
-    val monetTones = androidx.compose.runtime.remember(context, darkTheme, dynamicColor, colorScheme) {
+    val monetTones = remember(context, darkTheme, dynamicColor, colorScheme) {
         MonetTones.resolve(
             context = context,
             isNight = darkTheme,

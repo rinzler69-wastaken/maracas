@@ -42,7 +42,7 @@
     <string name="sens_end_low">Low</string>
     <string name="sens_end_high">High</string>
     <string name="sens_cd">Shake sensitivity slider</string>
-    <string name="sens_info">The slider moves the shake threshold between about 4.0 g at the left (low sensitivity, a hard shake is needed) and 1.8 g at the right (high sensitivity, a light shake is enough). 1 g is the pull of normal gravity. It only affects Shake to wake.</string>
+    <string name="sens_info">The slider moves the shake threshold between about 4.0 g at the left (low sensitivity, a hard shake is needed) and 1.8 g at the right (high sensitivity, a light shake is enough). 1 g is the pull of normal gravity. Tap the Actions button to toggle between waking the screen on shake or turning the torch on.</string>
     <string name="action_button_label">Actions</string>
     <string name="shake_action_dialog_title">Action on shake</string>
     <string name="action_default">Default</string>

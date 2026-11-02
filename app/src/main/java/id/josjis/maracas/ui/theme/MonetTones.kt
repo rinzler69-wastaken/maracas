@@ -6,7 +6,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.ColorUtils
@@ -32,8 +32,12 @@ data class MonetTones(
     companion object {
         const val DISABLED_ALPHA = 0.38f
         private val resIdCache = ConcurrentHashMap<String, Int>()
+        private val resolvedCache = ConcurrentHashMap<Triple<Boolean, Boolean, ColorScheme>, MonetTones>()
 
         fun resolve(context: Context, isNight: Boolean, dynamicColorEnabled: Boolean, colorScheme: ColorScheme): MonetTones {
+            val cacheKey = Triple(isNight, dynamicColorEnabled, colorScheme)
+            resolvedCache[cacheKey]?.let { return it }
+
             val useMonet = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
                     dynamicColorEnabled &&
                     DynamicColors.isDynamicColorAvailable()
@@ -120,7 +124,7 @@ data class MonetTones(
             // proximityDotPrimary: accent1 tone 30, fallback colorPrimary
             val proxDot = resolveTone("accent1", 30, colorScheme.primary)
 
-            return MonetTones(
+            val tones = MonetTones(
                 wakeEnabledBackground = wakeBg,
                 wakeEnabledForeground = wakeFg,
                 sensitivityPanelBackground = sensBg,
@@ -130,11 +134,13 @@ data class MonetTones(
                 proximityCardForeground = proxFg,
                 proximityDotPrimary = proxDot
             )
+            resolvedCache[cacheKey] = tones
+            return tones
         }
     }
 }
 
-val LocalMonetTones = staticCompositionLocalOf<MonetTones> {
+val LocalMonetTones = compositionLocalOf<MonetTones> {
     error("No MonetTones provided")
 }
 

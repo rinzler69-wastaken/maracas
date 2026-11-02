@@ -80,7 +80,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         repository.setTheme(theme)
     }
 
-    fun cycleThemeQuick() {
+    fun cycleTheme() {
         val current = uiState.value.settings.theme
         val next = when (current) {
             "light" -> "dark"

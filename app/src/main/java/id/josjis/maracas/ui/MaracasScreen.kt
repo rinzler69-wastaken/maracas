@@ -32,7 +32,7 @@ fun MaracasScreen(
     uiState: MainUiState,
     onToggleMaster: () -> Unit,
     onToggleMaterialYou: () -> Unit,
-    onCycleThemeQuick: () -> Unit,
+    onCycleTheme: () -> Unit,
     onSetThemeSystem: () -> Unit,
     onToggleShake: () -> Unit,
     onToggleLift: () -> Unit,
@@ -74,7 +74,7 @@ fun MaracasScreen(
                     isDynamicColorAvailable = uiState.isDynamicColorAvailable,
                     onToggleMaster = onToggleMaster,
                     onToggleMaterialYou = onToggleMaterialYou,
-                    onCycleThemeQuick = onCycleThemeQuick,
+                    onCycleTheme = onCycleTheme,
                     onSetThemeSystem = onSetThemeSystem
                 )
 

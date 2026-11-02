@@ -12,7 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 
 fun Modifier.bounceClickable(
     enabled: Boolean = true,
@@ -31,7 +31,10 @@ fun Modifier.bounceClickable(
     }
 
     this
-        .scale(scale.value)
+        .graphicsLayer {
+            scaleX = scale.value
+            scaleY = scale.value
+        }
         .clickable(
             interactionSource = interactionSource,
             indication = null,
@@ -59,7 +62,10 @@ fun Modifier.bounceCombinedClickable(
     }
 
     this
-        .scale(scale.value)
+        .graphicsLayer {
+            scaleX = scale.value
+            scaleY = scale.value
+        }
         .combinedClickable(
             interactionSource = interactionSource,
             indication = null,

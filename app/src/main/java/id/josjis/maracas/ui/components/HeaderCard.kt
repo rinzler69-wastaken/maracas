@@ -39,7 +39,7 @@ fun HeaderCard(
     isDynamicColorAvailable: Boolean,
     onToggleMaster: () -> Unit,
     onToggleMaterialYou: () -> Unit,
-    onCycleThemeQuick: () -> Unit,
+    onCycleTheme: () -> Unit,
     onSetThemeSystem: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -113,7 +113,7 @@ fun HeaderCard(
 
             Spacer(modifier = Modifier.width(6.dp))
 
-            // Theme toggle: tap = light/dark, long-click = system
+            // Theme toggle: tap = light/dark (manual mode only), hold = toggle manual/system
             val themeIcon = when (themeMode) {
                 "light" -> R.drawable.ic_theme_light
                 "dark" -> R.drawable.ic_theme_dark
@@ -125,8 +125,8 @@ fun HeaderCard(
                 contentDescription = stringResource(R.string.theme_cd),
                 activeBg = MaterialTheme.colorScheme.tertiary,
                 activeFg = MaterialTheme.colorScheme.onTertiary,
-                isActive = true,
-                onClick = onCycleThemeQuick,
+                isActive = masterOn,
+                onClick = onCycleTheme,
                 onLongClick = onSetThemeSystem
             )
         }

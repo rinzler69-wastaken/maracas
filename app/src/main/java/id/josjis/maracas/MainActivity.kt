@@ -91,7 +91,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                     uiState = uiState,
                     onToggleMaster = viewModel::toggleMaster,
                     onToggleMaterialYou = viewModel::toggleMaterialYou,
-                    onCycleThemeQuick = viewModel::cycleThemeQuick,
+                    onCycleTheme = viewModel::cycleTheme,
                     onSetThemeSystem = {
                         viewModel.setThemeSystem()
                         toast(R.string.theme_set_system)

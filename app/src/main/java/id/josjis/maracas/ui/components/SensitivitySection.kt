@@ -312,9 +312,11 @@ private fun ShakeSensitivityPanel(
                     modifier = Modifier.padding(top = 2.dp)
                 ) {
                     val actionIconRes = if (isFlashlight) R.drawable.ic_flashlight else R.drawable.ic_power
-                    val actionBg = if (usable) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surfaceContainer
-                    val actionFg = if (usable) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSurfaceVariant
+                    val actionBg = if (usable) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceContainer
+                    val actionFg = if (usable) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant
                     val actionLabel = if (isFlashlight) stringResource(R.string.action_flashlight) else stringResource(R.string.action_default)
+
+                    val buttonText = stringResource(R.string.action_button_label)
 
                     Box(
                         contentAlignment = Alignment.Center,
@@ -332,14 +334,14 @@ private fun ShakeSensitivityPanel(
                     ) {
                         Icon(
                             painter = painterResource(actionIconRes),
-                            contentDescription = actionLabel,
+                            contentDescription = "$buttonText: $actionLabel",
                             tint = actionFg,
                             modifier = Modifier.size(22.dp)
                         )
                     }
 
                     Text(
-                        text = actionLabel,
+                        text = buttonText,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 4.dp)
