@@ -17,7 +17,6 @@ enum class SensMode { SHAKE, LIFT }
 enum class ProximityState { UNAVAILABLE, FAR, NEAR }
 
 sealed interface ActiveDialog {
-    data object ShakeActions : ActiveDialog
     data class Info(@StringRes val titleRes: Int, @StringRes val messageRes: Int) : ActiveDialog
 }
 
@@ -83,7 +82,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun cycleThemeQuick() {
         val current = uiState.value.settings.theme
-        val next = if (current == "dark") "light" else "dark"
+        val next = when (current) {
+            "light" -> "dark"
+            "dark" -> "system"
+            else -> "light"
+        }
         repository.setTheme(next)
     }
 

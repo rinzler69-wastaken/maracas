@@ -66,7 +66,7 @@ fun SensitivitySection(
     shakeAction: String,
     liftSens: String,
     onSensChanged: (Int) -> Unit,
-    onOpenShakeActions: () -> Unit,
+    onSetShakeAction: (String) -> Unit,
     onSetLiftSens: (String) -> Unit,
     onShowShakeSensInfo: () -> Unit,
     onShowLiftSensInfo: () -> Unit,
@@ -92,7 +92,7 @@ fun SensitivitySection(
                     sensValue = shakeSens,
                     shakeAction = shakeAction,
                     onSensChanged = onSensChanged,
-                    onOpenShakeActions = onOpenShakeActions,
+                    onSetShakeAction = onSetShakeAction,
                     onShowInfo = onShowShakeSensInfo
                 )
                 SensMode.LIFT -> LiftSensitivityPanel(
@@ -190,7 +190,7 @@ private fun ShakeSensitivityPanel(
     sensValue: Int,
     shakeAction: String,
     onSensChanged: (Int) -> Unit,
-    onOpenShakeActions: () -> Unit,
+    onSetShakeAction: (String) -> Unit,
     onShowInfo: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -306,7 +306,7 @@ private fun ShakeSensitivityPanel(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // Actions Button Column
+                // Actions Button Column: One-tap toggle between Wake (default) and Flashlight
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(top = 2.dp)
@@ -314,6 +314,7 @@ private fun ShakeSensitivityPanel(
                     val actionIconRes = if (isFlashlight) R.drawable.ic_flashlight else R.drawable.ic_power
                     val actionBg = if (usable) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surfaceContainer
                     val actionFg = if (usable) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onSurfaceVariant
+                    val actionLabel = if (isFlashlight) stringResource(R.string.action_flashlight) else stringResource(R.string.action_default)
 
                     Box(
                         contentAlignment = Alignment.Center,
@@ -321,18 +322,24 @@ private fun ShakeSensitivityPanel(
                             .size(44.dp)
                             .clip(CircleShape)
                             .background(actionBg)
-                            .clickable(enabled = usable, onClick = onOpenShakeActions)
+                            .bounceClickable(
+                                enabled = usable,
+                                onClick = {
+                                    val nextAction = if (isFlashlight) "default" else "flashlight"
+                                    onSetShakeAction(nextAction)
+                                }
+                            )
                     ) {
                         Icon(
                             painter = painterResource(actionIconRes),
-                            contentDescription = stringResource(R.string.action_button_label),
+                            contentDescription = actionLabel,
                             tint = actionFg,
                             modifier = Modifier.size(22.dp)
                         )
                     }
 
                     Text(
-                        text = stringResource(R.string.action_button_label),
+                        text = actionLabel,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 4.dp)
@@ -447,7 +454,7 @@ private fun LiftButtonlet(
         Modifier.border(
             width = 1.dp,
             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
-            shape = RoundedCornerShape(16.dp)
+            shape = CircleShape
         )
     } else Modifier
 
@@ -455,11 +462,11 @@ private fun LiftButtonlet(
         contentAlignment = Alignment.Center,
         modifier = modifier
             .height(48.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(CircleShape)
             .then(borderModifier)
             .background(bg)
-            .clickable(enabled = usable, onClick = onClick)
-            .padding(horizontal = 12.dp)
+            .bounceClickable(enabled = usable, onClick = onClick)
+            .padding(horizontal = 16.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

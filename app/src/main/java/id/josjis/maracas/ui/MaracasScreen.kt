@@ -25,7 +25,6 @@ import id.josjis.maracas.ui.components.InfoDialog
 import id.josjis.maracas.ui.components.ProtectionSection
 import id.josjis.maracas.ui.components.ProximitySensorCard
 import id.josjis.maracas.ui.components.SensitivitySection
-import id.josjis.maracas.ui.components.ShakeActionsDialog
 import id.josjis.maracas.ui.components.WakeMethodSelector
 
 @Composable
@@ -111,7 +110,7 @@ fun MaracasScreen(
                     shakeAction = settings.shakeAction,
                     liftSens = settings.liftSens,
                     onSensChanged = onSensChanged,
-                    onOpenShakeActions = { onShowDialog(ActiveDialog.ShakeActions) },
+                    onSetShakeAction = onSetShakeAction,
                     onSetLiftSens = onSetLiftSens,
                     onShowShakeSensInfo = {
                         onShowDialog(ActiveDialog.Info(R.string.sens_title, R.string.sens_info))
@@ -162,13 +161,6 @@ fun MaracasScreen(
 
     // Active Dialogs
     when (val dialog = uiState.activeDialog) {
-        ActiveDialog.ShakeActions -> {
-            ShakeActionsDialog(
-                currentAction = settings.shakeAction,
-                onSelectAction = onSetShakeAction,
-                onDismiss = onDismissDialog
-            )
-        }
         is ActiveDialog.Info -> {
             InfoDialog(
                 title = stringResource(dialog.titleRes),

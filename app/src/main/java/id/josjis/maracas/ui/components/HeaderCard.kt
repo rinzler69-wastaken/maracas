@@ -125,7 +125,7 @@ fun HeaderCard(
                 contentDescription = stringResource(R.string.theme_cd),
                 activeBg = MaterialTheme.colorScheme.tertiary,
                 activeFg = MaterialTheme.colorScheme.onTertiary,
-                isActive = masterOn,
+                isActive = true,
                 onClick = onCycleThemeQuick,
                 onLongClick = onSetThemeSystem
             )
