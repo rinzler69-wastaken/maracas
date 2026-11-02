@@ -15,10 +15,13 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import id.josjis.maracas.ui.MainViewModel
@@ -34,6 +37,9 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
 
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
@@ -52,6 +58,31 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+            val darkTheme = when (uiState.settings.theme) {
+                "light" -> false
+                "dark" -> true
+                else -> isSystemInDarkTheme()
+            }
+
+            DisposableEffect(darkTheme) {
+                enableEdgeToEdge(
+                    statusBarStyle = if (darkTheme) {
+                        SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+                    } else {
+                        SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+                    },
+                    navigationBarStyle = if (darkTheme) {
+                        SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+                    } else {
+                        SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+                    }
+                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    window.isNavigationBarContrastEnforced = false
+                }
+                onDispose {}
+            }
+
             MaracasTheme(
                 themeMode = uiState.settings.theme,
                 dynamicColor = uiState.settings.materialYou
@@ -60,7 +91,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                     uiState = uiState,
                     onToggleMaster = viewModel::toggleMaster,
                     onToggleMaterialYou = viewModel::toggleMaterialYou,
-                    onSetTheme = viewModel::setTheme,
                     onCycleThemeQuick = viewModel::cycleThemeQuick,
                     onSetThemeSystem = {
                         viewModel.setThemeSystem()

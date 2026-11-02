@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.ColorUtils
 import com.google.android.material.color.DynamicColors
+import java.util.concurrent.ConcurrentHashMap
 
 @Immutable
 data class MonetTones(
@@ -30,6 +31,7 @@ data class MonetTones(
 
     companion object {
         const val DISABLED_ALPHA = 0.38f
+        private val resIdCache = ConcurrentHashMap<String, Int>()
 
         fun resolve(context: Context, isNight: Boolean, dynamicColorEnabled: Boolean, colorScheme: ColorScheme): MonetTones {
             val useMonet = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
@@ -55,7 +57,9 @@ data class MonetTones(
 
             fun sample(family: String, index: Int): Int? {
                 val resName = "system_${family}_$index"
-                val resId = context.resources.getIdentifier(resName, "color", "android")
+                val resId = resIdCache.computeIfAbsent(resName) {
+                    context.resources.getIdentifier(it, "color", "android")
+                }
                 if (resId == 0) return null
                 return try {
                     context.resources.getColor(resId, context.theme)
@@ -75,42 +79,45 @@ data class MonetTones(
                     val dynamicInt = when (tone) {
                         25 -> interpolatedSample(family, 800, 700)
                         75 -> interpolatedSample(family, 300, 200)
-                        85 -> interpolatedSample(family, 200, 100) // between 80 and 90
                         else -> monetResourceIndex(tone)?.let { sample(family, it) }
                     }
                     if (dynamicInt != null) return Color(dynamicInt)
                 }
 
-                // Fallback bundled samples
+                // Baseline fallback samples matching original MainActivity.kt fallbackSample logic:
                 return when ("$family:$tone") {
                     "accent1:20" -> MaracasPrimaryTone20
                     "accent1:25" -> MaracasPrimaryTone25
                     "accent1:30" -> MaracasPrimaryTone30
                     "accent1:75" -> MaracasPrimaryTone75
-                    "accent1:85" -> Color(ColorUtils.blendARGB(MaracasPrimaryTone75.toArgb(), MaracasPrimaryTone90.toArgb(), 0.5f))
                     "accent1:90" -> MaracasPrimaryTone90
                     "accent1:95" -> MaracasPrimaryTone95
-                    "accent2:20" -> MaracasSecondaryDark // tone 20/30
                     "accent2:30" -> MaracasSecondaryTone30
-                    "accent2:85" -> MaracasSecondaryContainerLight
                     "accent2:95" -> MaracasSecondaryTone95
                     "accent3:20" -> MaracasTertiaryTone20
                     "accent3:30" -> MaracasTertiaryTone30
-                    "accent3:80" -> MaracasTertiaryDark
-                    "accent3:85" -> MaracasTertiaryContainerLight
                     "accent3:90" -> MaracasTertiaryTone90
                     "accent3:95" -> MaracasTertiaryTone95
                     else -> fallback
                 }
             }
 
+            // Exactly matching MainActivity.kt:
+            // wakeEnabledBackground: accent1 tone 30 (night) / 85 (light), fallback colorPrimaryContainer
             val wakeBg = resolveTone("accent1", if (isNight) 30 else 85, colorScheme.primaryContainer)
+            // wakeEnabledForeground: accent1 tone 95 (night) / 10 (light), fallback colorOnPrimaryContainer
             val wakeFg = resolveTone("accent1", if (isNight) 95 else 10, colorScheme.onPrimaryContainer)
+            // sensitivityPanelBackground: accent1 tone 20 (night) / 90 (light), fallback colorPrimaryContainer
             val sensBg = resolveTone("accent1", if (isNight) 20 else 90, colorScheme.primaryContainer)
+            // protectionRowBackground: accent2 tone 20 (night) / 85 (light), fallback colorSecondaryContainer
             val protBg = resolveTone("accent2", if (isNight) 20 else 85, colorScheme.secondaryContainer)
+            // protectionRowForeground: accent2 tone 95 (night) / 10 (light), fallback colorOnSecondaryContainer
             val protFg = resolveTone("accent2", if (isNight) 95 else 10, colorScheme.onSecondaryContainer)
+            // proximityCardBackground: accent3 tone 20 (night) / 85 (light), fallback colorTertiaryContainer
             val proxBg = resolveTone("accent3", if (isNight) 20 else 85, colorScheme.tertiaryContainer)
+            // proximityCardForeground: accent3 tone 80 (night) / 20 (light), fallback colorOnTertiaryContainer
             val proxFg = resolveTone("accent3", if (isNight) 80 else 20, colorScheme.onTertiaryContainer)
+            // proximityDotPrimary: accent1 tone 30, fallback colorPrimary
             val proxDot = resolveTone("accent1", 30, colorScheme.primary)
 
             return MonetTones(

@@ -34,10 +34,11 @@ import id.josjis.maracas.R
 @Composable
 fun HeaderCard(
     masterOn: Boolean,
+    materialYouOn: Boolean,
     themeMode: String,
     isDynamicColorAvailable: Boolean,
     onToggleMaster: () -> Unit,
-    onOpenAppearance: () -> Unit,
+    onToggleMaterialYou: () -> Unit,
     onCycleThemeQuick: () -> Unit,
     onSetThemeSystem: () -> Unit,
     modifier: Modifier = Modifier
@@ -93,11 +94,11 @@ fun HeaderCard(
                 contentDescription = stringResource(R.string.master_cd),
                 activeBg = MaterialTheme.colorScheme.primary,
                 activeFg = MaterialTheme.colorScheme.onPrimary,
-                masterOn = masterOn,
+                isActive = masterOn,
                 onClick = onToggleMaster
             )
 
-            // Material You toggle (hidden if device doesn't support DynamicColors)
+            // Material You toggle button (direct toggle, no dialog)
             if (isDynamicColorAvailable) {
                 Spacer(modifier = Modifier.width(6.dp))
                 HeaderCircleButton(
@@ -105,14 +106,14 @@ fun HeaderCard(
                     contentDescription = stringResource(R.string.material_you_cd),
                     activeBg = MaterialTheme.colorScheme.secondary,
                     activeFg = MaterialTheme.colorScheme.onSecondary,
-                    masterOn = masterOn,
-                    onClick = onOpenAppearance
+                    isActive = masterOn && materialYouOn,
+                    onClick = onToggleMaterialYou
                 )
             }
 
             Spacer(modifier = Modifier.width(6.dp))
 
-            // Theme toggle: click = light/dark, long-click = system
+            // Theme toggle: tap = light/dark, long-click = system
             val themeIcon = when (themeMode) {
                 "light" -> R.drawable.ic_theme_light
                 "dark" -> R.drawable.ic_theme_dark
@@ -124,7 +125,7 @@ fun HeaderCard(
                 contentDescription = stringResource(R.string.theme_cd),
                 activeBg = MaterialTheme.colorScheme.tertiary,
                 activeFg = MaterialTheme.colorScheme.onTertiary,
-                masterOn = masterOn,
+                isActive = masterOn,
                 onClick = onCycleThemeQuick,
                 onLongClick = onSetThemeSystem
             )
@@ -138,13 +139,13 @@ private fun HeaderCircleButton(
     contentDescription: String,
     activeBg: Color,
     activeFg: Color,
-    masterOn: Boolean,
+    isActive: Boolean,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null
 ) {
-    val bg = if (masterOn) activeBg else Color.Transparent
-    val fg = if (masterOn) activeFg else MaterialTheme.colorScheme.onSurfaceVariant
-    val borderModifier = if (masterOn) Modifier else Modifier.border(1.5.dp, MaterialTheme.colorScheme.outline, CircleShape)
+    val bg = if (isActive) activeBg else Color.Transparent
+    val fg = if (isActive) activeFg else MaterialTheme.colorScheme.onSurfaceVariant
+    val borderModifier = if (isActive) Modifier else Modifier.border(1.5.dp, MaterialTheme.colorScheme.outline, CircleShape)
 
     Box(
         contentAlignment = Alignment.Center,

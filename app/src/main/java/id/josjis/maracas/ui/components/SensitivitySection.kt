@@ -33,11 +33,14 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.Placeholder
@@ -121,34 +124,37 @@ private fun SensitivityPlaceholderCard(
         modifier.fillMaxSize()
     }
 
-    val inlineContentMap = mapOf(
-        "adjust_icon" to InlineTextContent(
-            Placeholder(
-                width = 18.sp,
-                height = 18.sp,
-                placeholderVerticalAlign = PlaceholderVerticalAlign.Center
-            )
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_tune),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    )
+    val inlineContentMap = remember {
+        mapOf(
+            "adjust_icon" to InlineTextContent(
+                Placeholder(
+                    width = 18.sp,
+                    height = 18.sp,
+                    placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+                )
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_tune),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        )
+    }
 
     val placeholderRaw = stringResource(R.string.sens_placeholder_text)
-    val textParts = placeholderRaw.split("{adjust}")
-
-    val annotatedString = buildAnnotatedString {
-        if (textParts.isNotEmpty()) {
-            append(textParts[0])
-            appendInlineContent("adjust_icon", "[adjust]")
-            if (textParts.size > 1) {
-                append(textParts[1])
+    val annotatedString = remember(placeholderRaw) {
+        val textParts = placeholderRaw.split("{adjust}")
+        buildAnnotatedString {
+            if (textParts.isNotEmpty()) {
+                append(textParts[0])
+                appendInlineContent("adjust_icon", "[adjust]")
+                if (textParts.size > 1) {
+                    append(textParts[1])
+                }
+            } else {
+                append(placeholderRaw)
             }
-        } else {
-            append(placeholderRaw)
         }
     }
 
@@ -192,13 +198,27 @@ private fun ShakeSensitivityPanel(
     val tones = monetTones
     val isFlashlight = shakeAction == "flashlight"
     val maxSens = if (isFlashlight) 45f else 100f
-    val effectiveV = if (isFlashlight) sensValue.coerceAtMost(45) else sensValue
 
+    // Local slider state prevents IPC and disk churn on every drag frame
+    var sliderPos by remember(sensValue, maxSens) {
+        mutableFloatStateOf(sensValue.toFloat().coerceIn(0f, maxSens))
+    }
+
+    val effectiveV = if (isFlashlight) sliderPos.coerceAtMost(45f) else sliderPos
     var g = 4.0f - 2.2f * (effectiveV / 100f)
     if (isFlashlight) {
         g = g.coerceAtLeast(3.0f)
     }
-    val titleText = stringResource(R.string.sens_title_value, String.format(Locale.US, "%.1f", g))
+
+    // Safely format the string without throwing IllegalFormatConversionException
+    val formatPattern = stringResource(R.string.sens_title_value)
+    val titleText = remember(formatPattern, g) {
+        try {
+            String.format(Locale.US, formatPattern, g)
+        } catch (_: Exception) {
+            "Shake Sensitivity • about ${String.format(Locale.US, "%.1f", g)} g"
+        }
+    }
 
     val titleFg = if (masterOn) tones.wakeEnabledForeground else MaterialTheme.colorScheme.onSurface
     val infoFg = if (masterOn) tones.wakeEnabledForeground else MaterialTheme.colorScheme.onSurfaceVariant
@@ -250,8 +270,9 @@ private fun ShakeSensitivityPanel(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Slider(
-                        value = sensValue.toFloat().coerceIn(0f, maxSens),
-                        onValueChange = { onSensChanged(it.roundToInt()) },
+                        value = sliderPos,
+                        onValueChange = { sliderPos = it },
+                        onValueChangeFinished = { onSensChanged(sliderPos.roundToInt()) },
                         valueRange = 0f..maxSens,
                         enabled = usable,
                         colors = SliderDefaults.colors(

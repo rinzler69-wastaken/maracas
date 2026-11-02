@@ -100,12 +100,14 @@ fun MaracasTheme(
         else -> LightColorScheme
     }
 
-    val monetTones = MonetTones.resolve(
-        context = context,
-        isNight = darkTheme,
-        dynamicColorEnabled = dynamicColor,
-        colorScheme = colorScheme
-    )
+    val monetTones = androidx.compose.runtime.remember(context, darkTheme, dynamicColor, colorScheme) {
+        MonetTones.resolve(
+            context = context,
+            isNight = darkTheme,
+            dynamicColorEnabled = dynamicColor,
+            colorScheme = colorScheme
+        )
+    }
 
     CompositionLocalProvider(LocalMonetTones provides monetTones) {
         MaterialTheme(

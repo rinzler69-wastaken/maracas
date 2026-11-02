@@ -34,6 +34,8 @@
         <item name="colorSurfaceContainerHighest">@color/maracas_container_highest</item>
 
         <item name="colorMaracasYellow">@color/maracas_yellow</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowBackground">?attr/colorSurface</item>
         <item name="materialButtonOutlinedStyle">@style/Widget.Maracas.Button.Outlined</item>
     </style>

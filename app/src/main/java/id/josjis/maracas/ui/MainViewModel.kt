@@ -17,7 +17,6 @@ enum class SensMode { SHAKE, LIFT }
 enum class ProximityState { UNAVAILABLE, FAR, NEAR }
 
 sealed interface ActiveDialog {
-    data object Appearance : ActiveDialog
     data object ShakeActions : ActiveDialog
     data class Info(@StringRes val titleRes: Int, @StringRes val messageRes: Int) : ActiveDialog
 }
@@ -73,8 +72,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         repository.setMasterEnabled(next)
     }
 
-    fun toggleMaterialYou(enabled: Boolean) {
-        repository.setMaterialYou(enabled)
+    fun toggleMaterialYou() {
+        val next = !uiState.value.settings.materialYou
+        repository.setMaterialYou(next)
     }
 
     fun setTheme(theme: String) {
