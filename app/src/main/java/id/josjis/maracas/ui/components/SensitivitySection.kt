@@ -342,7 +342,7 @@ private fun ShakeSensitivityPanel(
 
                     Text(
                         text = buttonText,
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 4.dp)
                     )

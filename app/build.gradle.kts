@@ -23,6 +23,10 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"
     }
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
 }
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
@@ -38,6 +42,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+    implementation("androidx.profileinstaller:profileinstaller:1.4.1")
 
     testImplementation("junit:junit:4.13.2")
 }

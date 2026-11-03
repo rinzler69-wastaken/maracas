@@ -4,32 +4,32 @@
     <style name="TextAppearance.Maracas.AppTitle" parent="TextAppearance.Material3.TitleLarge">
         <item name="android:textSize">22sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="fontFamily">google-sans</item>
-        <item name="android:fontFamily">google-sans</item>
+        <item name="fontFamily">@font/google_sans_flex</item>
+        <item name="android:fontFamily">@font/google_sans_flex</item>
         <item name="android:letterSpacing">-0.01</item>
     </style>
     <style name="TextAppearance.Maracas.RowTitle" parent="TextAppearance.Material3.TitleMedium">
         <item name="android:textColor">?attr/colorOnSurface</item>
         <item name="android:textSize">16sp</item>
-        <item name="fontFamily">google-sans</item>
-        <item name="android:fontFamily">google-sans</item>
+        <item name="fontFamily">@font/google_sans_flex</item>
+        <item name="android:fontFamily">@font/google_sans_flex</item>
     </style>
     <style name="TextAppearance.Maracas.Secondary" parent="TextAppearance.Material3.BodyMedium">
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
-        <item name="fontFamily">google-sans</item>
-        <item name="android:fontFamily">google-sans</item>
+        <item name="fontFamily">@font/google_sans_flex</item>
+        <item name="android:fontFamily">@font/google_sans_flex</item>
     </style>
     <style name="TextAppearance.Maracas.Caption" parent="TextAppearance.Material3.BodySmall">
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
-        <item name="fontFamily">google-sans</item>
-        <item name="android:fontFamily">google-sans</item>
+        <item name="fontFamily">@font/google_sans_flex</item>
+        <item name="android:fontFamily">@font/google_sans_flex</item>
     </style>
     <style name="TextAppearance.Maracas.StatusLabel" parent="TextAppearance.Material3.LabelLarge">
         <item name="android:textColor">?attr/colorOnSurface</item>
         <item name="android:textStyle">bold</item>
         <item name="android:letterSpacing">0.04</item>
-        <item name="fontFamily">google-sans</item>
-        <item name="android:fontFamily">google-sans</item>
+        <item name="fontFamily">@font/google_sans_flex</item>
+        <item name="android:fontFamily">@font/google_sans_flex</item>
     </style>
 
     <style name="ShapeAppearanceOverlay.Maracas.Button" parent="">

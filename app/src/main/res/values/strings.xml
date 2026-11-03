@@ -18,13 +18,13 @@
     <string name="theme_set_system">Theme set to System</string>
     <string name="info_cd">About %1$s</string>
 
-    <!-- Material 3 typography tokens: override roboto default with system Google Sans -->
-    <string name="material_font_normal">google-sans</string>
-    <string name="material_font_text">google-sans</string>
-    <string name="material_font_subhead">google-sans</string>
-    <string name="material_font_title">google-sans</string>
-    <string name="material_font_headline">google-sans</string>
-    <string name="material_font_display">google-sans</string>
+    <!-- Material 3 typography tokens: override roboto default with bundled Google Sans Flex font -->
+    <string name="material_font_normal">@font/google_sans_flex</string>
+    <string name="material_font_text">@font/google_sans_flex</string>
+    <string name="material_font_subhead">@font/google_sans_flex</string>
+    <string name="material_font_title">@font/google_sans_flex</string>
+    <string name="material_font_headline">@font/google_sans_flex</string>
+    <string name="material_font_display">@font/google_sans_flex</string>
 
     <!-- Wake method selector -->
     <string name="wake_method_title">Wake method</string>
