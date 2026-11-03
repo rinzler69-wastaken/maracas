@@ -1,6 +1,9 @@
 package id.josjis.maracas.ui.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -33,10 +36,14 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -51,8 +58,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import id.josjis.maracas.R
 import id.josjis.maracas.ui.SensMode
-import id.josjis.maracas.ui.theme.MonetTones
-import id.josjis.maracas.ui.theme.monetTones
+import id.josjis.maracas.ui.theme.LocalContrastLevel
+import id.josjis.maracas.ui.theme.LocalDynamicColor
+import id.josjis.maracas.ui.theme.primaryContainerSensitivity
+import id.josjis.maracas.ui.theme.resolveSubtitleAlpha
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -64,6 +73,8 @@ fun SensitivitySection(
     expandedSensMode: SensMode?,
     shakeSens: Int,
     shakeAction: String,
+    sensDefault: Int = 50,
+    sensFlashlight: Int = 45,
     liftSens: String,
     onSensChanged: (Int) -> Unit,
     onSetShakeAction: (String) -> Unit,
@@ -91,6 +102,8 @@ fun SensitivitySection(
                     shakeEnabled = shakeEnabled,
                     sensValue = shakeSens,
                     shakeAction = shakeAction,
+                    sensDefault = sensDefault,
+                    sensFlashlight = sensFlashlight,
                     onSensChanged = onSensChanged,
                     onSetShakeAction = onSetShakeAction,
                     onShowInfo = onShowShakeSensInfo
@@ -176,7 +189,7 @@ private fun SensitivityPlaceholderCard(
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp, lineHeight = 21.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.alpha(if (masterOn) 1f else MonetTones.DISABLED_ALPHA)
+                modifier = Modifier.alpha(if (masterOn) 1f else 0.38f)
             )
         }
     }
@@ -189,22 +202,60 @@ private fun ShakeSensitivityPanel(
     shakeEnabled: Boolean,
     sensValue: Int,
     shakeAction: String,
+    sensDefault: Int,
+    sensFlashlight: Int,
     onSensChanged: (Int) -> Unit,
     onSetShakeAction: (String) -> Unit,
     onShowInfo: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val usable = masterOn && shakeEnabled
-    val tones = monetTones
     val isFlashlight = shakeAction == "flashlight"
-    val maxSens = if (isFlashlight) 45f else 100f
+    val targetMaxSens = if (isFlashlight) 45f else 100f
+    val targetSens = (if (isFlashlight) sensFlashlight else sensDefault).toFloat().coerceIn(0f, targetMaxSens)
 
-    // Local slider state prevents IPC and disk churn on every drag frame
-    var sliderPos by remember(sensValue, maxSens) {
-        mutableFloatStateOf(sensValue.toFloat().coerceIn(0f, maxSens))
+    val animSliderPos = remember { Animatable(targetSens) }
+    val animMaxSens = remember { Animatable(targetMaxSens) }
+    val coroutineScope = rememberCoroutineScope()
+
+    var isUserDragging by remember { mutableStateOf(false) }
+    var dragPos by remember { mutableFloatStateOf(targetSens) }
+
+    var lastAction by remember { mutableStateOf(shakeAction) }
+
+    LaunchedEffect(shakeAction, targetSens, targetMaxSens) {
+        if (lastAction != shakeAction) {
+            lastAction = shakeAction
+            isUserDragging = false
+            if (sensDefault != sensFlashlight) {
+                // The values are distinct: smoothly animate sliding towards the selected mode's value
+                launch {
+                    animSliderPos.animateTo(
+                        targetValue = targetSens,
+                        animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing)
+                    )
+                }
+                launch {
+                    animMaxSens.animateTo(
+                        targetValue = targetMaxSens,
+                        animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing)
+                    )
+                }
+            } else {
+                // Values are not distinct: snap directly without sliding animation
+                animSliderPos.snapTo(targetSens)
+                animMaxSens.snapTo(targetMaxSens)
+            }
+        } else if (!isUserDragging) {
+            animSliderPos.snapTo(targetSens)
+            animMaxSens.snapTo(targetMaxSens)
+        }
     }
 
-    val effectiveV = if (isFlashlight) sliderPos.coerceAtMost(45f) else sliderPos
+    val displayMax = if (isUserDragging) targetMaxSens else animMaxSens.value
+    val currentVal = if (isUserDragging) dragPos else animSliderPos.value.coerceIn(0f, displayMax)
+
+    val effectiveV = if (isFlashlight) currentVal.coerceAtMost(45f) else currentVal
     var g = 4.0f - 2.2f * (effectiveV / 100f)
     if (isFlashlight) {
         g = g.coerceAtLeast(3.0f)
@@ -220,12 +271,26 @@ private fun ShakeSensitivityPanel(
         }
     }
 
-    val titleFg = if (masterOn) tones.wakeEnabledForeground else MaterialTheme.colorScheme.onSurface
-    val infoFg = if (masterOn) tones.wakeEnabledForeground else MaterialTheme.colorScheme.onSurfaceVariant
+    val contrastLevel = LocalContrastLevel.current
+    val subTextAlpha = resolveSubtitleAlpha(contrastLevel)
+    val trackAlpha = when {
+        contrastLevel >= 0.75f -> 0.45f
+        contrastLevel >= 0.25f -> 0.35f
+        else -> 0.24f
+    }
+
+    val titleFg = if (masterOn) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+    val infoFg = if (masterOn) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+
+    val sensBg by animateColorAsState(
+        targetValue = if (masterOn) MaterialTheme.colorScheme.primaryContainerSensitivity else MaterialTheme.colorScheme.surfaceContainer,
+        animationSpec = tween(200),
+        label = "shakeSensBg"
+    )
 
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = tones.sensitivityPanelBackground),
+        colors = CardDefaults.cardColors(containerColor = sensBg),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = modifier.fillMaxSize()
     ) {
@@ -269,16 +334,29 @@ private fun ShakeSensitivityPanel(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.weight(1f)) {
+                    val isDynamic = LocalDynamicColor.current
+                    val activeSliderColor = if (isDynamic) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
                     Slider(
-                        value = sliderPos,
-                        onValueChange = { sliderPos = it },
-                        onValueChangeFinished = { onSensChanged(sliderPos.roundToInt()) },
-                        valueRange = 0f..maxSens,
+                        value = currentVal,
+                        onValueChange = { newValue ->
+                            isUserDragging = true
+                            dragPos = newValue
+                            coroutineScope.launch { animSliderPos.stop() }
+                        },
+                        onValueChangeFinished = {
+                            isUserDragging = false
+                            val rounded = dragPos.roundToInt()
+                            onSensChanged(rounded)
+                            coroutineScope.launch {
+                                animSliderPos.snapTo(dragPos)
+                            }
+                        },
+                        valueRange = 0f..displayMax,
                         enabled = usable,
                         colors = SliderDefaults.colors(
-                            thumbColor = if (usable) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            activeTrackColor = if (usable) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surfaceContainerHigh,
-                            inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainer
+                            thumbColor = if (usable) activeSliderColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                            activeTrackColor = if (usable) activeSliderColor else MaterialTheme.colorScheme.surfaceContainerHigh,
+                            inactiveTrackColor = if (usable) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = trackAlpha) else MaterialTheme.colorScheme.surfaceContainerHighest
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -291,13 +369,13 @@ private fun ShakeSensitivityPanel(
                         Text(
                             text = stringResource(R.string.sens_end_low),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (usable) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = subTextAlpha) else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.weight(1f)
                         )
                         Text(
                             text = stringResource(R.string.sens_end_high),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (usable) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = subTextAlpha) else MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.End,
                             modifier = Modifier.weight(1f)
                         )
@@ -343,7 +421,7 @@ private fun ShakeSensitivityPanel(
                     Text(
                         text = buttonText,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (usable) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = subTextAlpha) else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }
@@ -362,12 +440,17 @@ private fun LiftSensitivityPanel(
     modifier: Modifier = Modifier
 ) {
     val usable = masterOn && liftEnabled
-    val tones = monetTones
     val isGentle = liftSens != "firm"
+
+    val sensBg by animateColorAsState(
+        targetValue = if (masterOn) MaterialTheme.colorScheme.primaryContainerSensitivity else MaterialTheme.colorScheme.surfaceContainer,
+        animationSpec = tween(200),
+        label = "liftSensBg"
+    )
 
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = tones.sensitivityPanelBackground),
+        colors = CardDefaults.cardColors(containerColor = sensBg),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = modifier.fillMaxSize()
     ) {
@@ -385,7 +468,7 @@ private fun LiftSensitivityPanel(
                 Text(
                     text = stringResource(R.string.lift_sens_title),
                     style = MaterialTheme.typography.titleMedium,
-                    color = if (masterOn) tones.wakeEnabledForeground else MaterialTheme.colorScheme.onSurface,
+                    color = if (masterOn) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
                     modifier = Modifier.weight(1f)
                 )
 
@@ -397,7 +480,7 @@ private fun LiftSensitivityPanel(
                     Icon(
                         painter = painterResource(R.drawable.ic_info),
                         contentDescription = stringResource(R.string.info_cd, stringResource(R.string.lift_sens_title)),
-                        tint = if (masterOn) tones.wakeEnabledForeground else MaterialTheme.colorScheme.onSurfaceVariant,
+                        tint = if (masterOn) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -443,19 +526,17 @@ private fun LiftButtonlet(
     modifier: Modifier = Modifier
 ) {
     val active = masterOn && selected
-    val tones = monetTones
-    val panelBg = if (masterOn) tones.sensitivityPanelBackground else MaterialTheme.colorScheme.surfaceContainer
-    val bg = if (active) MaterialTheme.colorScheme.tertiary else panelBg
+    val bg = if (active) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0f)
     val fg = when {
         active -> MaterialTheme.colorScheme.onTertiary
-        masterOn -> tones.wakeEnabledForeground
-        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = MonetTones.DISABLED_ALPHA)
+        masterOn -> MaterialTheme.colorScheme.onPrimaryContainer
+        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
     }
 
     val borderModifier = if (!active && masterOn) {
         Modifier.border(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+            color = MaterialTheme.colorScheme.outline,
             shape = CircleShape
         )
     } else Modifier

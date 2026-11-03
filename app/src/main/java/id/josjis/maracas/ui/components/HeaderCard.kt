@@ -25,10 +25,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import id.josjis.maracas.R
+import id.josjis.maracas.ui.theme.MaracasM3DisabledDark
+import id.josjis.maracas.ui.theme.MaracasM3DisabledLight
+import id.josjis.maracas.ui.theme.MaracasOnM3DisabledDark
+import id.josjis.maracas.ui.theme.MaracasOnM3DisabledLight
+import id.josjis.maracas.ui.theme.primaryContainerHeader
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -44,7 +50,7 @@ fun HeaderCard(
     modifier: Modifier = Modifier
 ) {
     val headerBg by animateColorAsState(
-        targetValue = if (masterOn) MaterialTheme.colorScheme.primaryContainer
+        targetValue = if (masterOn) MaterialTheme.colorScheme.primaryContainerHeader
         else MaterialTheme.colorScheme.surfaceContainer,
         animationSpec = tween(250),
         label = "headerBg"
@@ -101,12 +107,31 @@ fun HeaderCard(
             // Material You toggle button (direct toggle, no dialog)
             if (isDynamicColorAvailable) {
                 Spacer(modifier = Modifier.width(6.dp))
+
+                val isDark = when (themeMode) {
+                    "light" -> false
+                    "dark" -> true
+                    else -> isSystemInDarkTheme()
+                }
+
+                val m3ActiveBg = if (materialYouOn) {
+                    MaterialTheme.colorScheme.secondary
+                } else {
+                    if (isDark) MaracasM3DisabledDark else MaracasM3DisabledLight
+                }
+
+                val m3ActiveFg = if (materialYouOn) {
+                    MaterialTheme.colorScheme.onSecondary
+                } else {
+                    if (isDark) MaracasOnM3DisabledDark else MaracasOnM3DisabledLight
+                }
+
                 HeaderCircleButton(
-                    iconRes = R.drawable.ic_material_you,
+                    iconRes = if (materialYouOn) R.drawable.ic_material_you_enabled else R.drawable.ic_material_you,
                     contentDescription = stringResource(R.string.material_you_cd),
-                    activeBg = MaterialTheme.colorScheme.secondary,
-                    activeFg = MaterialTheme.colorScheme.onSecondary,
-                    isActive = masterOn && materialYouOn,
+                    activeBg = m3ActiveBg,
+                    activeFg = m3ActiveFg,
+                    isActive = masterOn,
                     onClick = onToggleMaterialYou
                 )
             }

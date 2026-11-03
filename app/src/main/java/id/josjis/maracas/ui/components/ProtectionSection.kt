@@ -27,14 +27,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import id.josjis.maracas.R
-import id.josjis.maracas.ui.theme.MonetTones
-import id.josjis.maracas.ui.theme.monetTones
+import id.josjis.maracas.ui.theme.LocalContrastLevel
+import id.josjis.maracas.ui.theme.LocalDynamicColor
+import id.josjis.maracas.ui.theme.resolveSubtitleAlpha
 
 @Composable
 fun ProtectionSection(
@@ -50,28 +52,28 @@ fun ProtectionSection(
     Column(
         modifier = modifier.fillMaxWidth()
     ) {
-        // Top Card: Reach / Flip (top rounded 24dp, bottom flat 0dp)
+        // Top Card: Reach / Flip (top rounded 24dp, inner bottom rounded 4dp)
         ProtectionRowCard(
             title = stringResource(R.string.reach_flip_title),
             subtitle = stringResource(R.string.reach_flip_subtitle),
             iconRes = R.drawable.ic_mobile_hand,
             isChecked = reachFlipEnabled,
             masterOn = masterOn,
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 0.dp, bottomEnd = 0.dp),
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
             onCheckedChange = onToggleReachFlip,
             onInfoClick = onShowReachFlipInfo
         )
 
         Spacer(modifier = Modifier.height(2.dp))
 
-        // Bottom Card: Pocket Protection (top flat 0dp, bottom rounded 24dp)
+        // Bottom Card: Pocket Protection (inner top rounded 4dp, bottom rounded 24dp)
         ProtectionRowCard(
             title = stringResource(R.string.pocket_protection_title),
             subtitle = stringResource(R.string.pocket_protection_subtitle),
             iconRes = R.drawable.ic_shield,
             isChecked = pocketEnabled,
             masterOn = masterOn,
-            shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomStart = 24.dp, bottomEnd = 24.dp),
+            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 24.dp, bottomEnd = 24.dp),
             onCheckedChange = onTogglePocket,
             onInfoClick = onShowPocketInfo
         )
@@ -91,28 +93,32 @@ private fun ProtectionRowCard(
     modifier: Modifier = Modifier
 ) {
     val active = masterOn && isChecked
-    val tones = monetTones
 
     val rowBg by animateColorAsState(
-        targetValue = if (active) tones.protectionRowBackground else MaterialTheme.colorScheme.surfaceContainer,
+        targetValue = if (active) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer,
         animationSpec = tween(200),
         label = "protectionRowBg"
     )
 
+    val subAlpha = resolveSubtitleAlpha(LocalContrastLevel.current)
+
     val rowFg = when {
-        active -> tones.protectionRowForeground
+        active -> MaterialTheme.colorScheme.onSecondaryContainer
         masterOn -> MaterialTheme.colorScheme.onSurface
-        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = MonetTones.DISABLED_ALPHA)
+        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
     }
 
     val subtitleFg = when {
-        active -> tones.mutedSubtitle(rowFg, rowBg)
+        active -> MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = subAlpha)
         masterOn -> MaterialTheme.colorScheme.onSurfaceVariant
-        else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = MonetTones.DISABLED_ALPHA)
+        else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
     }
 
-    val iconBg = if (active) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceContainerHigh
-    val iconFg = if (active) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant
+    val isDynamic = LocalDynamicColor.current
+    val activeIconBg = if (isDynamic) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+    val activeIconFg = if (isDynamic) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onPrimary
+    val iconBg = if (active) activeIconBg else MaterialTheme.colorScheme.surfaceContainerHigh
+    val iconFg = if (active) activeIconFg else MaterialTheme.colorScheme.onSurfaceVariant
 
     Card(
         shape = shape,
@@ -134,7 +140,7 @@ private fun ProtectionRowCard(
                     .size(38.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(iconBg)
-                    .alpha(if (masterOn) 1f else MonetTones.DISABLED_ALPHA)
+                    .alpha(if (masterOn) 1f else 0.38f)
             ) {
                 Icon(
                     painter = painterResource(iconRes),
@@ -176,14 +182,18 @@ private fun ProtectionRowCard(
                 Icon(
                     painter = painterResource(R.drawable.ic_info),
                     contentDescription = stringResource(R.string.info_cd, title),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                        alpha = if (masterOn) 1f else MonetTones.DISABLED_ALPHA
-                    ),
+                    tint = if (active) {
+                        MaterialTheme.colorScheme.onSecondaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                            alpha = if (masterOn) 1f else 0.38f
+                        )
+                    },
                     modifier = Modifier.size(24.dp)
                 )
             }
 
-            // Switch with custom track & thumb colors
+            // Switch with tertiary role track & thumb colors (matches theme button, zero border)
             Switch(
                 checked = isChecked,
                 onCheckedChange = onCheckedChange,
@@ -191,12 +201,16 @@ private fun ProtectionRowCard(
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = MaterialTheme.colorScheme.onTertiary,
                     checkedTrackColor = MaterialTheme.colorScheme.tertiary,
+                    checkedBorderColor = Color.Transparent,
                     uncheckedThumbColor = MaterialTheme.colorScheme.outline,
-                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    uncheckedBorderColor = Color.Transparent,
                     disabledCheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
                     disabledUncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    disabledCheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = MonetTones.DISABLED_ALPHA),
-                    disabledUncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = MonetTones.DISABLED_ALPHA)
+                    disabledCheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                    disabledUncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                    disabledCheckedBorderColor = Color.Transparent,
+                    disabledUncheckedBorderColor = Color.Transparent
                 ),
                 modifier = Modifier.padding(start = 4.dp)
             )

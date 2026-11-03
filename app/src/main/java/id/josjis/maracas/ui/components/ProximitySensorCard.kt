@@ -25,8 +25,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import id.josjis.maracas.R
 import id.josjis.maracas.ui.ProximityState
+import id.josjis.maracas.ui.theme.LocalDynamicColor
 import id.josjis.maracas.ui.theme.MaracasYellow
-import id.josjis.maracas.ui.theme.monetTones
+import id.josjis.maracas.ui.theme.proximityDotPrimary
+import id.josjis.maracas.ui.theme.tertiaryContainerProximity
 
 @Composable
 fun ProximitySensorCard(
@@ -34,15 +36,14 @@ fun ProximitySensorCard(
     proximityState: ProximityState,
     modifier: Modifier = Modifier
 ) {
-    val tones = monetTones
-
     val cardBg by animateColorAsState(
-        targetValue = if (masterOn) tones.proximityCardBackground else MaterialTheme.colorScheme.surfaceContainer,
+        targetValue = if (masterOn) MaterialTheme.colorScheme.tertiaryContainerProximity else MaterialTheme.colorScheme.surfaceContainer,
         animationSpec = tween(200),
         label = "proxCardBg"
     )
 
-    val fg = if (masterOn) tones.proximityCardForeground else MaterialTheme.colorScheme.onSurface
+    // Un-muted text and status whether master is ON or OFF
+    val fg = if (masterOn) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSurface
 
     Card(
         shape = RoundedCornerShape(24.dp),
@@ -84,8 +85,8 @@ fun ProximitySensorCard(
 
                 ProximityDotIndicator(
                     state = proximityState,
-                    masterOn = masterOn,
-                    primaryColor = tones.proximityDotPrimary
+                    primaryColor = MaterialTheme.colorScheme.proximityDotPrimary,
+                    hasBackingCircle = LocalDynamicColor.current
                 )
             }
         }
@@ -95,26 +96,59 @@ fun ProximitySensorCard(
 @Composable
 private fun ProximityDotIndicator(
     state: ProximityState,
-    masterOn: Boolean,
-    primaryColor: Color
+    primaryColor: Color,
+    hasBackingCircle: Boolean = true
 ) {
     Canvas(modifier = Modifier.size(22.dp)) {
         val center = Offset(size.width / 2f, size.height / 2f)
         val radius = size.minDimension / 2f
 
-        when (state) {
-            ProximityState.UNAVAILABLE -> {
-                // Unavailable: neutral gray ring / dot
-                drawCircle(
-                    color = Color.Gray.copy(alpha = 0.6f),
-                    radius = radius,
-                    center = center
-                )
-            }
+        if (!hasBackingCircle) {
+            // Simplified fallback path (no backing circle)
+            when (state) {
+                ProximityState.UNAVAILABLE -> {
+                    // Unavailable: neutral gray ring / dot
+                    drawCircle(
+                        color = Color.Gray.copy(alpha = 0.6f),
+                        radius = radius,
+                        center = center
+                    )
+                }
 
-            ProximityState.NEAR -> {
-                if (masterOn) {
-                    // NEAR when Master ON: primary outline around solid yellow dot
+                ProximityState.NEAR -> {
+                    // Clean solid yellow dot with no backing ring or outline
+                    drawCircle(
+                        color = MaracasYellow,
+                        radius = radius,
+                        center = center
+                    )
+                }
+
+                ProximityState.FAR -> {
+                    // Hollow yellow ring with no backing fill (card flat gray shines through)
+                    val strokeWidth = 2.5.dp.toPx()
+                    drawCircle(
+                        color = MaracasYellow,
+                        radius = radius - strokeWidth / 2f,
+                        center = center,
+                        style = Stroke(width = strokeWidth)
+                    )
+                }
+            }
+        } else {
+            // Dynamic color Material You path (preserves backing circle and outlines)
+            when (state) {
+                ProximityState.UNAVAILABLE -> {
+                    // Unavailable: neutral gray ring / dot
+                    drawCircle(
+                        color = Color.Gray.copy(alpha = 0.6f),
+                        radius = radius,
+                        center = center
+                    )
+                }
+
+                ProximityState.NEAR -> {
+                    // Solid yellow dot with primary outline
                     val strokeWidth = 2.dp.toPx()
                     drawCircle(
                         color = MaracasYellow,
@@ -127,19 +161,10 @@ private fun ProximityDotIndicator(
                         center = center,
                         style = Stroke(width = strokeWidth)
                     )
-                } else {
-                    // NEAR when Master OFF: solid yellow dot
-                    drawCircle(
-                        color = MaracasYellow,
-                        radius = radius,
-                        center = center
-                    )
                 }
-            }
 
-            ProximityState.FAR -> {
-                if (masterOn) {
-                    // FAR when Master ON: primary outer background, 2dp inset yellow ring, 5dp inset primary inner fill
+                ProximityState.FAR -> {
+                    // Primary outer background, 2dp inset yellow ring, 5dp inset primary inner fill
                     val stroke2dp = 2.dp.toPx()
                     val stroke5dp = 5.dp.toPx()
 
@@ -160,15 +185,6 @@ private fun ProximityDotIndicator(
                         color = primaryColor,
                         radius = (radius - stroke5dp).coerceAtLeast(0f),
                         center = center
-                    )
-                } else {
-                    // FAR when Master OFF: yellow ring
-                    val strokeWidth = 2.dp.toPx()
-                    drawCircle(
-                        color = MaracasYellow,
-                        radius = radius - strokeWidth / 2f,
-                        center = center,
-                        style = Stroke(width = strokeWidth)
                     )
                 }
             }

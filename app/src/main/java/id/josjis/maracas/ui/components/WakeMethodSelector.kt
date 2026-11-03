@@ -31,8 +31,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import id.josjis.maracas.R
 import id.josjis.maracas.ui.SensMode
-import id.josjis.maracas.ui.theme.MonetTones
-import id.josjis.maracas.ui.theme.monetTones
+import id.josjis.maracas.ui.theme.LocalContrastLevel
+import id.josjis.maracas.ui.theme.resolveSubtitleAlpha
 
 @Composable
 fun WakeMethodSelector(
@@ -98,24 +98,25 @@ private fun WakeCard(
     modifier: Modifier = Modifier
 ) {
     val active = masterOn && selected
-    val tones = monetTones
 
     val cardBg by animateColorAsState(
-        targetValue = if (active) tones.wakeEnabledBackground else MaterialTheme.colorScheme.surfaceContainer,
+        targetValue = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,
         animationSpec = tween(200),
         label = "cardBg"
     )
 
+    val subAlpha = resolveSubtitleAlpha(LocalContrastLevel.current)
+
     val fg = when {
-        active -> tones.wakeEnabledForeground
+        active -> MaterialTheme.colorScheme.onPrimaryContainer
         masterOn -> MaterialTheme.colorScheme.onSurface
-        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = MonetTones.DISABLED_ALPHA)
+        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
     }
 
     val subtitleFg = when {
-        active -> tones.mutedSubtitle(fg, cardBg)
+        active -> MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = subAlpha)
         masterOn -> MaterialTheme.colorScheme.onSurfaceVariant
-        else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = MonetTones.DISABLED_ALPHA)
+        else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
     }
 
     val iconBg = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh
@@ -146,7 +147,7 @@ private fun WakeCard(
                         .size(26.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(iconBg)
-                        .alpha(if (masterOn) 1f else MonetTones.DISABLED_ALPHA)
+                        .alpha(if (masterOn) 1f else 0.38f)
                 ) {
                     Icon(
                         painter = painterResource(iconRes),
@@ -208,13 +209,13 @@ private fun WakeCard(
                 val usable = masterOn && selected
                 val adjustBg = when {
                     adjustActive -> MaterialTheme.colorScheme.tertiary
-                    usable -> tones.wakeEnabledBackground
+                    usable -> cardBg
                     else -> MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0f)
                 }
                 val adjustFg = when {
                     adjustActive -> MaterialTheme.colorScheme.onTertiary
-                    usable -> tones.wakeEnabledForeground
-                    else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = MonetTones.DISABLED_ALPHA)
+                    usable -> fg
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
                 }
 
                 Box(

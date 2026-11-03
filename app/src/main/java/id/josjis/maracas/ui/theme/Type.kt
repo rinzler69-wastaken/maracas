@@ -10,29 +10,41 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.ExperimentalTextApi
 import id.josjis.maracas.R
 
-// Google Sans Flex Variable Font bundled directly in res/font/google_sans_flex.ttf
-// Matches Expressive Clock implementation on AOSP and Pixel devices
+// Google Sans Flex variable font with ROND=100 (fully rounded terminals)
+// and explicit weight axis per entry for proper Compose font matching
 @OptIn(ExperimentalTextApi::class)
 val GoogleSansFlex = FontFamily(
     Font(
         resId = R.font.google_sans_flex,
         weight = FontWeight.W400,
-        variationSettings = FontVariation.Settings(FontVariation.weight(400))
+        variationSettings = FontVariation.Settings(
+            FontVariation.weight(400),
+            FontVariation.Setting("ROND", 100f)
+        )
     ),
     Font(
         resId = R.font.google_sans_flex,
         weight = FontWeight.W500,
-        variationSettings = FontVariation.Settings(FontVariation.weight(500))
+        variationSettings = FontVariation.Settings(
+            FontVariation.weight(500),
+            FontVariation.Setting("ROND", 100f)
+        )
     ),
     Font(
         resId = R.font.google_sans_flex,
         weight = FontWeight.W600,
-        variationSettings = FontVariation.Settings(FontVariation.weight(600))
+        variationSettings = FontVariation.Settings(
+            FontVariation.weight(600),
+            FontVariation.Setting("ROND", 100f)
+        )
     ),
     Font(
         resId = R.font.google_sans_flex,
         weight = FontWeight.W700,
-        variationSettings = FontVariation.Settings(FontVariation.weight(700))
+        variationSettings = FontVariation.Settings(
+            FontVariation.weight(700),
+            FontVariation.Setting("ROND", 100f)
+        )
     )
 )
 

@@ -63,7 +63,7 @@
 
     <!-- Pocket Protection row -->
     <string name="pocket_protection_title">Pocket Protection</string>
-    <string name="pocket_protection_subtitle">Suppress wakes while stowed</string>
+    <string name="pocket_protection_subtitle">Suppress wakes while phone is in pocket</string>
     <string name="pocket_protection_info">Use the proximity sensor to suppress unwanted wake events while the phone appears covered or inside a pocket.</string>
 
     <!-- Proximity status -->

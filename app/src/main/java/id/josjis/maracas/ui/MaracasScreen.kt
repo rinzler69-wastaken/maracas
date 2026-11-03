@@ -108,6 +108,8 @@ fun MaracasScreen(
                     expandedSensMode = uiState.expandedSensMode,
                     shakeSens = settings.currentSens,
                     shakeAction = settings.shakeAction,
+                    sensDefault = settings.sensDefault,
+                    sensFlashlight = settings.sensFlashlight,
                     liftSens = settings.liftSens,
                     onSensChanged = onSensChanged,
                     onSetShakeAction = onSetShakeAction,

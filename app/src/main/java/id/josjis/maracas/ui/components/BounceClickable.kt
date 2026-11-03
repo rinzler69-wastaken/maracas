@@ -11,13 +11,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.graphicsLayer
 
+// ── Performance-safe bounce modifiers ─────────────────────────────────
+// These are @Composable functions that return Modifier chains, NOT
+// Modifier.composed {} extensions.  Modifier.composed creates a brand-new
+// composition scope on every call, preventing the Compose compiler from
+// skipping recomposition.  This was the root cause of the first-run jank.
+//
+// ANTI-REGRESSION RULE: Never use Modifier.composed {} in this codebase.
+// Always model interactive modifiers as @Composable Modifier-returning fns.
+
+@Composable
 fun Modifier.bounceClickable(
     enabled: Boolean = true,
     onClick: () -> Unit
-): Modifier = composed {
+): Modifier {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed = interactionSource.collectIsPressedAsState().value
     val scale = remember { Animatable(1f) }
@@ -30,7 +39,7 @@ fun Modifier.bounceClickable(
         }
     }
 
-    this
+    return this
         .graphicsLayer {
             scaleX = scale.value
             scaleY = scale.value
@@ -44,11 +53,12 @@ fun Modifier.bounceClickable(
 }
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
 fun Modifier.bounceCombinedClickable(
     enabled: Boolean = true,
     onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit
-): Modifier = composed {
+): Modifier {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed = interactionSource.collectIsPressedAsState().value
     val scale = remember { Animatable(1f) }
@@ -61,7 +71,7 @@ fun Modifier.bounceCombinedClickable(
         }
     }
 
-    this
+    return this
         .graphicsLayer {
             scaleX = scale.value
             scaleY = scale.value
